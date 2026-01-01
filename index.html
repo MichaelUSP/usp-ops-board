@@ -9,10 +9,10 @@
     :root{
       /* Light theme */
       --bg:#ffffff;
-      --panel:#f3f6fb;
-      --grid:#d7dde9;
+      --panel:#f5f7fb;
+      --grid:#e1e5ee;
       --text:#111827;
-      --muted:#374151;
+      --muted:#4b5563;
 
       /* Dept colors */
       --wh:#dbeafe;   /* Warehouse */
@@ -22,75 +22,50 @@
       --we:#ffe4e6;   /* Wellness */
 
       /* Status colors */
-      --tr:#cffafe;   /* Travel */
+      --tr:#cffafe;   /* Travel – aqua */
       --off:#f1f5f9;  /* Off */
-
-      /* TV scaling base (updated by JS) */
-      --tv: 1;
     }
 
-    *{
-      box-sizing:border-box;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: geometricPrecision;
-    }
-
-    body{
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
-      overflow:hidden;   /* no scrollbars on TV */
-      user-select:none;  /* prevent highlight on TV */
-    }
+    *{ box-sizing:border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    body{ margin:0; background:var(--bg); color:var(--text); }
 
     header{
       display:flex;
       justify-content:space-between;
       align-items:center;
-      padding: calc(18px * var(--tv)) calc(26px * var(--tv)) calc(12px * var(--tv));
-      border-bottom: calc(2px * var(--tv)) solid var(--grid);
+      padding:18px 28px 14px;
+      border-bottom:2px solid var(--grid);
       background:#ffffff;
-      gap: calc(16px * var(--tv));
+      gap:18px;
     }
 
     .header-left{
       display:flex;
       flex-direction:column;
-      gap: calc(10px * var(--tv));
+      gap:10px;
       min-width:0;
       flex: 1 1 auto;
     }
 
-    h1{
-      margin:0;
-      font-size: calc(44px * var(--tv));
-      letter-spacing:.4px;
-      line-height:1.05;
-    }
-
-    .sub{
-      font-size: calc(20px * var(--tv));
-      color:var(--muted);
-      font-weight:600;
-    }
+    h1{ margin:0; font-size:40px; letter-spacing:.4px; }
+    .sub{ font-size:18px; color:var(--muted); }
 
     .tabs{
       display:flex;
-      gap: calc(10px * var(--tv));
+      gap:10px;
       align-items:center;
       flex-wrap:wrap;
     }
 
     .tab{
       appearance:none;
-      border: calc(2px * var(--tv)) solid var(--grid);
+      border:1px solid var(--grid);
       background:#ffffff;
       color:var(--text);
-      padding: calc(10px * var(--tv)) calc(16px * var(--tv));
+      padding:10px 14px;
       border-radius:999px;
-      font-weight:800;
-      font-size: calc(16px * var(--tv));
+      font-weight:700;
+      font-size:14px;
       cursor:pointer;
     }
 
@@ -100,44 +75,40 @@
       border-color:#111827;
     }
 
+    /* Header right area: legend + logo */
     .header-right{
       display:flex;
       align-items:center;
-      gap: calc(16px * var(--tv));
+      gap:18px;
       flex: 0 0 auto;
     }
 
     .legend{
       display:flex;
-      gap: calc(12px * var(--tv));
+      gap:12px;
       flex-wrap:wrap;
       align-items:center;
       justify-content:flex-end;
-      font-size: calc(15px * var(--tv));
+      font-size:13px;
       color:var(--muted);
-      font-weight:700;
-      max-width: calc(640px * var(--tv));
+      max-width: 520px;
     }
 
-    .tag{display:flex;align-items:center;gap: calc(7px * var(--tv));}
+    .tag{display:flex;align-items:center;gap:6px}
     .sw{
-      width: calc(18px * var(--tv));
-      height: calc(12px * var(--tv));
-      border-radius: calc(5px * var(--tv));
-      border: calc(2px * var(--tv)) solid rgba(0,0,0,.18);
+      width:16px;height:11px;border-radius:4px;
+      border:1px solid rgba(0,0,0,.2);
       flex: 0 0 auto;
     }
 
     .logo{
-      height: calc(56px * var(--tv));
+      height:50px;
       width:auto;
       object-fit:contain;
       flex:0 0 auto;
     }
 
-    main{
-      padding: calc(16px * var(--tv)) calc(18px * var(--tv));
-    }
+    main{ padding:18px 22px; }
 
     .board{
       width:100%;
@@ -145,99 +116,66 @@
       border-collapse:separate;
       border-spacing:0;
       background:#ffffff;
-      border: calc(3px * var(--tv)) solid var(--grid);
-      border-radius: calc(16px * var(--tv));
+      border:2px solid var(--grid);
+      border-radius:14px;
       overflow:hidden;
     }
 
     .board thead th{
       background:var(--panel);
-      padding: calc(14px * var(--tv)) calc(10px * var(--tv));
-      font-size: calc(22px * var(--tv));
-      border-bottom: calc(3px * var(--tv)) solid var(--grid);
+      padding:14px 10px;
+      font-size:20px;
+      border-bottom:2px solid var(--grid);
       text-align:center;
-      font-weight:900;
-      letter-spacing:.6px;
     }
 
-    /* Employee column slightly narrower so everything fits */
     .board th.employee{
-      width: calc(210px * var(--tv));
+      width:210px;
       text-align:left;
-      padding-left: calc(18px * var(--tv));
+      padding-left:18px;
     }
 
-    /* More compact row height for all-on-one-screen */
     .board td, .board tbody th{
-      height: calc(82px * var(--tv));
-      padding: calc(12px * var(--tv));
-      border-right: calc(2px * var(--tv)) solid var(--grid);
-      border-bottom: calc(2px * var(--tv)) solid var(--grid);
+      height:90px;
+      padding:12px;
+      border-right:1px solid var(--grid);
+      border-bottom:1px solid var(--grid);
       vertical-align:middle;
     }
 
     .board tbody th{
-      font-weight:900;
-      letter-spacing:.6px;
+      font-weight:700;
+      letter-spacing:.4px;
       background:#ffffff;
-      font-size: calc(22px * var(--tv));
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+      font-size:20px;
     }
 
     .cell{
       height:100%;
-      border-radius: calc(14px * var(--tv));
-      padding: calc(10px * var(--tv)) calc(12px * var(--tv)); /* tighter */
+      border-radius:12px;
+      padding:14px 16px;
       display:flex;
       flex-direction:column;
       justify-content:center;
-      gap: calc(5px * var(--tv)); /* tighter */
-      border: calc(2px * var(--tv)) solid rgba(0,0,0,.10);
+      gap:6px;
+      border:1px solid rgba(0,0,0,.08);
     }
 
-    /* BIG = Task (slightly smaller, still readable at 10ft) */
+    /* BIG = Task */
     .big{
-      font-size: calc(22px * var(--tv));
-      font-weight:1000;
+      font-size:22px;
+      font-weight:900;
       line-height:1.05;
-      letter-spacing:.2px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
     }
 
     /* SMALL = Project */
     .small{
-      font-size: calc(16px * var(--tv));
-      color:#1f2937;
-      font-weight:700;
+      font-size:16px;
+      color:#374151;
       line-height:1.1;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
-      opacity:.92;
-    }
-
-    /* Weekend columns half-width */
-    .board thead th.weekend{
-      font-size: calc(18px * var(--tv));
-      letter-spacing:.4px;
-    }
-    .board td.weekend{
-      padding-left: calc(8px * var(--tv));
-      padding-right: calc(8px * var(--tv));
-    }
-    .board td.weekend .cell{
-      padding-left: calc(8px * var(--tv));
-      padding-right: calc(8px * var(--tv));
-    }
-    .board td.weekend .big{
-      font-size: calc(20px * var(--tv));
-    }
-    .board td.weekend .small{
-      font-size: calc(15px * var(--tv));
     }
 
     /* STRONG TODAY HIGHLIGHT */
@@ -246,18 +184,18 @@
       color:#ffffff;
     }
     .board td.today{
-      background:#fde68a;
+      background:#fef3c7;
     }
     .board td.today .cell{
-      box-shadow: 0 0 0 calc(4px * var(--tv)) #111827;
+      box-shadow:0 0 0 3px #111827;
     }
 
     /* OFF styling */
     .cell.off{
       background:var(--off) !important;
-      opacity:0.90;
-      border: calc(3px * var(--tv)) dashed rgba(17,24,39,.35);
-      filter:grayscale(.08);
+      opacity:0.88;
+      border:2px dashed rgba(17,24,39,.35);
+      filter:grayscale(.10);
     }
     .cell.off .big,
     .cell.off .small{
@@ -273,10 +211,13 @@
       <h1>USP Operations Weekly Schedule</h1>
       <div class="sub" id="weekLabel">Loading week…</div>
     </div>
+
+    <!-- Tabs render here -->
     <div class="tabs" id="tabs"></div>
   </div>
 
   <div class="header-right">
+    <!-- Legend moved to header -->
     <div class="legend" aria-label="Color legend">
       <div class="tag"><span class="sw" style="background:var(--op)"></span>Ops</div>
       <div class="tag"><span class="sw" style="background:var(--wh)"></span>WH</div>
@@ -287,6 +228,7 @@
       <div class="tag"><span class="sw" style="background:var(--off)"></span>Off</div>
     </div>
 
+    <!-- Logo on the RIGHT -->
     <img src="./usp-logo.png" alt="Urban Soccer Park" class="logo" />
   </div>
 </header>
@@ -298,16 +240,9 @@
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS9dYykqhLDctkDUvYOrX5buK09uK1hHaryxnro6YiHltFPKyTCkd_ji_pWWdIPfy-XdlNB-XhTMv0-/pub?gid=0&single=true&output=csv";
 const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-const DEPT_RANK = { operations:1, warehouse:2, installation:3, turf:4, wellness:5 };
 
-function setTvScale(){
-  // Cap scaling so we don't accidentally oversize on 4K outputs.
-  const w = window.innerWidth || 1920;
-  const scale = Math.max(1, Math.min(1.15, w / 1920));
-  document.documentElement.style.setProperty("--tv", String(scale));
-}
-setTvScale();
-window.addEventListener("resize", setTvScale);
+/* Department order */
+const DEPT_RANK = { operations:1, warehouse:2, installation:3, turf:4, wellness:5 };
 
 function normalizeDept(d=""){
   d = d.toLowerCase().trim();
@@ -327,8 +262,8 @@ function getTodayAbbrev(){
 
 function mondayOfThisWeekISO(){
   const d = new Date();
-  const day = d.getDay();
-  const diff = (day === 0 ? -6 : 1 - day);
+  const day = d.getDay(); // Sun=0..Sat=6
+  const diff = (day === 0 ? -6 : 1 - day); // move to Monday
   const monday = new Date(d);
   monday.setDate(d.getDate() + diff);
   monday.setHours(0,0,0,0);
@@ -358,6 +293,7 @@ function parseCSV(text){
 
   const rawHeader = (rows.shift() || []).map(h => (h||"").trim().toLowerCase());
   const header = rawHeader.map(h => {
+    // Map known fields to code-friendly keys
     if (h === "default department") return "default_department";
     if (h === "department") return "dept";
     if (h === "person" || h === "employee") return "employee";
@@ -403,12 +339,14 @@ function getCellBg(r){
   if (d === "turf") return "var(--tu)";
   if (d === "operations") return "var(--op)";
   if (d === "wellness") return "var(--we)";
+
   return "#ffffff";
 }
 
 function buildTabs(weekStarts, selected, onSelect){
   const el = document.getElementById("tabs");
   el.innerHTML = "";
+
   if (weekStarts.length <= 1) return;
 
   const thisMon = mondayOfThisWeekISO();
@@ -454,7 +392,7 @@ function buildBoard(records){
     employeeDefaultDept[e] = normalizeDept(ddRaw);
   }
 
-  // Sort: dept rank then employee
+  // Sort: dept rank then employee name
   const employees = [...byEmployee.keys()].sort((a,b)=>{
     const da = employeeDefaultDept[a];
     const db = employeeDefaultDept[b];
@@ -477,27 +415,6 @@ function buildBoard(records){
   const table = document.getElementById("board");
   table.innerHTML = "";
 
-  // Build colgroup so Sat/Sun are half width (50% of a weekday column)
-  const colgroup = document.createElement("colgroup");
-
-  // Employee column
-  const colEmp = document.createElement("col");
-  colEmp.style.width = `calc(210px * var(--tv))`;
-  colgroup.appendChild(colEmp);
-
-  // Day columns
-  for (const d of DAYS){
-    const col = document.createElement("col");
-    // Weekend: 0.5x, Weekday: 1x (relative). We'll express using percentages later? In tables,
-    // col width "auto" can be inconsistent, so we set relative via min-width and let table-layout:fixed do the rest.
-    // We approximate by setting a smaller width for weekends.
-    if (d === "Sat" || d === "Sun") col.style.width = "6%";
-    else col.style.width = "12%";
-    colgroup.appendChild(col);
-  }
-
-  table.appendChild(colgroup);
-
   // Header
   const thead = document.createElement("thead");
   const hr = document.createElement("tr");
@@ -511,7 +428,6 @@ function buildBoard(records){
     const th = document.createElement("th");
     th.textContent = d.toUpperCase();
     if (d === today) th.classList.add("today");
-    if (d === "Sat" || d === "Sun") th.classList.add("weekend");
     hr.appendChild(th);
   }
 
@@ -531,7 +447,6 @@ function buildBoard(records){
     for (const d of DAYS){
       const td = document.createElement("td");
       if (d === today) td.classList.add("today");
-      if (d === "Sat" || d === "Sun") td.classList.add("weekend");
 
       const r = idx.get(e)[d];
       if (r){

@@ -4,265 +4,285 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>USP Ops Board</title>
-
   <style>
     :root{
-      /* Base palette */
-      --bg:#ffffff;
-      --panel:#f5f7fb;
-      --grid:#e1e5ee;
-      --text:#111827;
-      --muted:#4b5563;
+      --bg:#0b1220; --panel:#0f1b33; --grid:#1b2a4a; --text:#e9eefc; --muted:#a8b3d6;
 
-      /* Dept colors (cell backgrounds) */
-      --wh:#dbeafe;   /* Warehouse – blue */
-      --in:#fde68a;   /* Install – yellow (swapped) */
-      --tu:#bbf7d0;   /* Turf – green (swapped) */
-      --op:#e9d5ff;   /* Operations – purple */
-      --tr:#e5e7eb;   /* Travel – gray */
-      --off:#f3f4f6;  /* Off */
+      /* Dept colors */
+      --wh:#6aa9ff;  /* Warehouse */
+
+      /* SWAPPED: Install and Turf */
+      --in:#f2b84b;  /* Install (was Turf) */
+      --tu:#63d27a;  /* Turf (was Install) */
+
+      --op:#b18cff;  /* Operations */
+      --tr:#9aa4b2;  /* Travel */
+      --off:#5b6577; /* Off */
     }
 
-    *{
-      box-sizing:border-box;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-    }
-
-    body{
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
-    }
-
+    *{box-sizing:border-box;font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#060a14);color:var(--text);}
     header{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-end;
-      padding:28px 36px 16px;
-      border-bottom:2px solid var(--grid);
-      background:#ffffff;
+      display:flex;align-items:flex-end;justify-content:space-between;
+      padding:28px 34px 14px;border-bottom:1px solid rgba(255,255,255,.08);
     }
+    h1{margin:0;font-size:44px;letter-spacing:.5px}
+    .sub{color:var(--muted);font-size:18px;margin-top:6px}
+    .notes{color:var(--muted);font-size:18px;text-align:right}
+    main{padding:18px 24px 20px}
 
-    h1{
-      margin:0;
-      font-size:42px;
-      letter-spacing:.4px;
-    }
-
-    .sub{
-      margin-top:6px;
-      font-size:18px;
-      color:var(--muted);
-    }
-
-    main{
-      padding:20px 28px;
-    }
-
-    /* BOARD TABLE */
     .board{
-      width:100%;
+      width:100%; border-collapse:separate; border-spacing:0;
       table-layout:fixed;
-      border-collapse:separate;
-      border-spacing:0;
-      background:#ffffff;
-      border:2px solid var(--grid);
-      border-radius:14px;
-      overflow:hidden;
+      background:rgba(255,255,255,.02);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:14px; overflow:hidden;
     }
-
     .board thead th{
-      background:var(--panel);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
       padding:14px 10px;
       font-size:20px;
-      border-bottom:2px solid var(--grid);
-      text-align:center;
+      border-bottom:1px solid rgba(255,255,255,.06);
     }
-
     .board th.person{
-      width:210px;
-      text-align:left;
-      padding-left:18px;
+      width:210px;text-align:left;padding-left:18px;
     }
-
-    .board td,
-    .board tbody th{
-      height:90px;
-      padding:12px;
-      border-right:1px solid var(--grid);
-      border-bottom:1px solid var(--grid);
+    .board td, .board tbody th{
+      border-bottom:1px solid rgba(255,255,255,.06);
+      border-right:1px solid rgba(255,255,255,.06);
+      height:86px;
       vertical-align:middle;
+      padding:10px 12px;
       font-size:20px;
     }
-
     .board tbody th{
+      background:rgba(255,255,255,.02);
+      text-align:left;
+      padding-left:18px;
       font-weight:700;
-      letter-spacing:.4px;
-      background:#ffffff;
+      letter-spacing:.3px;
     }
-
-    /* ASSIGNMENT CARD */
     .cell{
       height:100%;
       border-radius:12px;
-      padding:14px 16px;
       display:flex;
       flex-direction:column;
       justify-content:center;
       gap:6px;
-      border:1px solid rgba(0,0,0,.08);
+      padding:12px 14px;
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.18);
     }
+    .assignment{font-weight:800;font-size:22px;line-height:1.05}
+    .meta{color:rgba(255,255,255,.85);font-size:16px;line-height:1.1}
 
-    .assignment{
-      font-size:22px;
-      font-weight:800;
-      line-height:1.05;
+    .legend{display:flex;gap:14px;flex-wrap:wrap;padding:14px 6px 0;color:var(--muted);font-size:16px}
+    .tag{display:flex;align-items:center;gap:8px}
+    .sw{width:18px;height:12px;border-radius:4px;border:1px solid rgba(255,255,255,.2)}
+
+    /* TODAY highlight (STRONGER) */
+    .board thead th.today {
+      background: rgba(255,255,255,.18);
+      box-shadow:
+        inset 0 -3px 0 rgba(255,255,255,.55),
+        inset 0 0 0 1px rgba(255,255,255,.18);
     }
-
-    .meta{
-      font-size:16px;
-      color:#374151;
+    .board td.today {
+      background: rgba(255,255,255,.10);
     }
-
-    /* STRONG TODAY HIGHLIGHT */
-    .board thead th.today{
-      background:#111827;
-      color:#ffffff;
-    }
-
-    .board td.today{
-      background:#fef3c7;
-    }
-
-    .board td.today .cell{
-      box-shadow:0 0 0 3px #111827;
-    }
-
-    /* LEGEND */
-    .legend{
-      display:flex;
-      gap:18px;
-      flex-wrap:wrap;
-      padding:18px 8px 0;
-      font-size:16px;
-      color:var(--muted);
-    }
-
-    .tag{
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-
-    .sw{
-      width:18px;
-      height:12px;
-      border-radius:4px;
-      border:1px solid rgba(0,0,0,.2);
+    .board td.today .cell {
+      box-shadow:
+        0 0 0 3px rgba(255,255,255,.32),
+        0 0 18px rgba(255,255,255,.12),
+        inset 0 0 0 1px rgba(0,0,0,.18);
     }
   </style>
 </head>
-
 <body>
-<header>
-  <div>
-    <h1>WEEKLY OPERATIONS SCHEDULE</h1>
-    <div class="sub" id="weekLabel">Loading week…</div>
-  </div>
-</header>
+  <header>
+    <div>
+      <h1>WEEKLY OPERATIONS SCHEDULE</h1>
+      <div class="sub" id="weekLabel">Loading week…</div>
+    </div>
+    <div class="notes" id="notesBox">USP Ops Board</div>
+  </header>
 
-<main>
-  <table class="board" id="board"></table>
-
-  <div class="legend">
-    <div class="tag"><span class="sw" style="background:var(--wh)"></span>Warehouse</div>
-    <div class="tag"><span class="sw" style="background:var(--in)"></span>Install</div>
-    <div class="tag"><span class="sw" style="background:var(--tu)"></span>Turf</div>
-    <div class="tag"><span class="sw" style="background:var(--op)"></span>Operations</div>
-    <div class="tag"><span class="sw" style="background:var(--tr)"></span>Travel</div>
-    <div class="tag"><span class="sw" style="background:var(--off)"></span>Off</div>
-  </div>
-</main>
+  <main>
+    <table class="board" id="board"></table>
+    <div class="legend">
+      <div class="tag"><span class="sw" style="background:var(--wh)"></span>Warehouse</div>
+      <div class="tag"><span class="sw" style="background:var(--in)"></span>Install</div>
+      <div class="tag"><span class="sw" style="background:var(--tu)"></span>Turf</div>
+      <div class="tag"><span class="sw" style="background:var(--op)"></span>Operations</div>
+      <div class="tag"><span class="sw" style="background:var(--tr)"></span>Travel</div>
+      <div class="tag"><span class="sw" style="background:var(--off)"></span>Off</div>
+    </div>
+  </main>
 
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS9dYykqhLDctkDUvYOrX5buK09uK1hHaryxnro6YiHltFPKyTCkd_ji_pWWdIPfy-XdlNB-XhTMv0-/pub?gid=0&single=true&output=csv";
 const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
-const deptColor = d => {
-  d = (d||"").toLowerCase();
+const deptColorVar = (deptRaw) => {
+  const d = (deptRaw||"").trim().toLowerCase();
   if (d.startsWith("ware")) return "var(--wh)";
   if (d.startsWith("inst")) return "var(--in)";
   if (d.startsWith("turf")) return "var(--tu)";
-  if (d.startsWith("op")) return "var(--op)";
+  if (d.startsWith("op"))   return "var(--op)";
   if (d.startsWith("trav")) return "var(--tr)";
-  if (d==="off"||d==="pto") return "var(--off)";
-  return "#ffffff";
+  if (d === "off" || d === "pto") return "var(--off)";
+  return "rgba(255,255,255,.08)";
 };
 
-const today = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()];
+function getTodayAbbrev(){
+  // Uses the TV/device local timezone
+  const map = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  return map[new Date().getDay()];
+}
 
-function parseCSV(t){
-  const [h,...r]=t.trim().split(/\r?\n/).map(l=>l.split(","));
-  const headers=h.map(x=>x.trim().toLowerCase());
-  return r.map(row=>{
-    const o={};
-    headers.forEach((k,i)=>o[k]=row[i]?.trim()||"");
-    return o;
+function parseCSV(text){
+  // Minimal CSV parser that handles quoted commas.
+  const rows = [];
+  let row = [], cur = "", inQ = false;
+  for (let i=0;i<text.length;i++){
+    const c=text[i], n=text[i+1];
+    if (c === '"' && inQ && n === '"'){ cur+='"'; i++; continue; }
+    if (c === '"'){ inQ = !inQ; continue; }
+    if (c === ',' && !inQ){ row.push(cur); cur=""; continue; }
+    if ((c === '\n' || c === '\r') && !inQ){
+      if (cur.length || row.length){ row.push(cur); rows.push(row); }
+      row=[]; cur="";
+      continue;
+    }
+    cur += c;
+  }
+  if (cur.length || row.length){ row.push(cur); rows.push(row); }
+
+  // Normalize headers: trim + lowercase + map common synonyms
+  const rawHeader = (rows.shift() || []).map(h => (h||"").trim().toLowerCase());
+  const header = rawHeader.map(h => {
+    if (h === "department") return "dept";
+    if (h === "name" || h === "employee") return "person";
+    if (h === "task" || h === "focus") return "assignment";
+    if (h === "site" || h === "job site") return "location";
+    if (h === "week" || h === "week of") return "week_start";
+    return h;
   });
+
+  return rows
+    .filter(r=>r.some(x => (x||"").trim() !== ""))
+    .map(r=>{
+      const obj={};
+      header.forEach((h,idx)=>obj[h]= (r[idx]||"").trim());
+      return obj;
+    });
+}
+
+function buildBoard(records){
+  const weekStart = (records[0]?.week_start) || "";
+  document.getElementById("weekLabel").textContent = weekStart ? `Week of ${weekStart}` : "Weekly view";
+
+  const today = getTodayAbbrev();
+
+  // Index: person -> day -> record
+  const people = [...new Set(records.map(r => r.person).filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b));
+
+  const idx = new Map();
+  for (const p of people) idx.set(p, {});
+  for (const r of records){
+    const p = r.person; if (!p) continue;
+    const day = (r.day||"").trim().slice(0,3);
+    // Normalize common variants like "Monday" -> "Mon"
+    const dayNorm = day.charAt(0).toUpperCase() + day.slice(1).toLowerCase();
+    if (!DAYS.includes(dayNorm)) continue;
+    idx.get(p)[dayNorm] = r;
+  }
+
+  const table = document.getElementById("board");
+  table.innerHTML = "";
+
+  // Header
+  const thead = document.createElement("thead");
+  const hr = document.createElement("tr");
+
+  const th0 = document.createElement("th");
+  th0.className = "person";
+  th0.textContent = "PERSON";
+  hr.appendChild(th0);
+
+  for (const d of DAYS){
+    const th = document.createElement("th");
+    th.textContent = d.toUpperCase();
+    if (d === today) th.classList.add("today");
+    hr.appendChild(th);
+  }
+
+  thead.appendChild(hr);
+  table.appendChild(thead);
+
+  // Body
+  const tbody = document.createElement("tbody");
+  for (const p of people){
+    const tr = document.createElement("tr");
+
+    const th = document.createElement("th");
+    th.textContent = p.toUpperCase();
+    tr.appendChild(th);
+
+    for (const d of DAYS){
+      const td = document.createElement("td");
+      if (d === today) td.classList.add("today");
+
+      const r = idx.get(p)[d];
+      const assignment = (r?.assignment || "").trim();
+      const loc = (r?.location || "").trim();
+      const dept = (r?.dept || "").trim();
+
+      const card = document.createElement("div");
+      card.className = "cell";
+      card.style.background = deptColorVar(dept);
+
+      const lower = assignment.toLowerCase();
+      if (lower === "off" || lower === "pto") card.style.opacity = "0.65";
+      if (lower === "travel") card.style.opacity = "0.80";
+
+      const a = document.createElement("div");
+      a.className = "assignment";
+      a.textContent = assignment;
+
+      const m = document.createElement("div");
+      m.className = "meta";
+      // Prefer location, fallback to dept
+      m.textContent = loc ? loc : (dept ? dept : "");
+
+      card.appendChild(a);
+      if (m.textContent) card.appendChild(m);
+
+      td.appendChild(card);
+      tr.appendChild(td);
+    }
+
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
 }
 
 async function init(){
-  const text = await (await fetch(CSV_URL,{cache:"no-store"})).text();
-  const rows = parseCSV(text);
-  const people=[...new Set(rows.map(r=>r.person))].sort();
+  const res = await fetch(CSV_URL, {cache:"no-store"});
+  const text = await res.text();
+  const recs = parseCSV(text);
 
-  const map={};
-  people.forEach(p=>map[p]={});
-  rows.forEach(r=>{
-    const d=r.day.slice(0,3);
-    if(map[r.person] && DAYS.includes(d)) map[r.person][d]=r;
-  });
+  // If multiple weeks exist, filter to the latest week_start (string sort works if you use YYYY-MM-DD)
+  const weeks = [...new Set(recs.map(r=>r.week_start).filter(Boolean))].sort();
+  const latest = weeks[weeks.length-1];
+  const filtered = latest ? recs.filter(r=>r.week_start===latest) : recs;
 
-  document.getElementById("weekLabel").textContent =
-    rows[0]?.week_start ? `Week of ${rows[0].week_start}` : "";
+  buildBoard(filtered);
 
-  const t=document.getElementById("board");
-  t.innerHTML="";
-
-  const thead=document.createElement("thead");
-  const hr=document.createElement("tr");
-  hr.innerHTML=`<th class="person">PERSON</th>`;
-  DAYS.forEach(d=>{
-    const th=document.createElement("th");
-    th.textContent=d.toUpperCase();
-    if(d===today) th.classList.add("today");
-    hr.appendChild(th);
-  });
-  thead.appendChild(hr);
-  t.appendChild(thead);
-
-  const tbody=document.createElement("tbody");
-  people.forEach(p=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<th>${p.toUpperCase()}</th>`;
-    DAYS.forEach(d=>{
-      const td=document.createElement("td");
-      if(d===today) td.classList.add("today");
-      const r=map[p][d];
-      if(r){
-        td.innerHTML=`
-          <div class="cell" style="background:${deptColor(r.dept)}">
-            <div class="assignment">${r.assignment}</div>
-            <div class="meta">${r.location||r.dept}</div>
-          </div>`;
-      }
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
-  t.appendChild(tbody);
-
-  setTimeout(init,120000);
+  // auto-refresh every 2 minutes
+  setTimeout(init, 120000);
 }
 init();
 </script>

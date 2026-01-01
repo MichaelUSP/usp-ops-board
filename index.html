@@ -45,7 +45,7 @@
       margin:0;
       background:var(--bg);
       color:var(--text);
-      overflow:hidden; /* default TV mode */
+      overflow:hidden; /* keep page itself from scrolling */
     }
 
     header{
@@ -126,20 +126,16 @@
       flex:0 0 auto;
     }
 
-    /* main is fixed-height; scroll can be enabled via toggle */
+    /* ✅ main ALWAYS scrolls now */
     main{
       padding:18px 22px;
       height: calc(100vh - var(--headerH));
-      overflow:hidden; /* default */
+      overflow:auto;                 /* ✅ enable scrolling */
+      overscroll-behavior: contain;  /* keeps it clean on TVs */
     }
-
-    /* When scroll enabled (emergency mode) */
-    body.scroll-on { overflow:hidden; }
-    body.scroll-on main { overflow:auto; }
 
     .board{
       width:100%;
-      height:100%;
       table-layout:fixed;
       border-collapse:separate;
       border-spacing:0;
@@ -157,12 +153,19 @@
       text-align:center;
       font-weight:800;
       letter-spacing:.3px;
+      position: sticky; /* nice on scroll */
+      top: 0;
+      z-index: 2;
     }
 
     .board th.employee{
       width: var(--empColW);
       text-align:left;
       padding-left:18px;
+      position: sticky; /* keeps names visible while scrolling sideways (if any) */
+      left: 0;
+      z-index: 3;
+      background: var(--panel);
     }
 
     .board td, .board tbody th{
@@ -171,6 +174,7 @@
       border-right:1px solid var(--grid);
       border-bottom:1px solid var(--grid);
       vertical-align:middle;
+      background:#fff;
     }
 
     .board tbody th{
@@ -181,6 +185,9 @@
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
+      position: sticky;
+      left: 0;
+      z-index: 1;
     }
 
     .cell{
@@ -194,7 +201,6 @@
       border:1px solid rgba(0,0,0,.08);
     }
 
-    /* BIG = Task (allow 2 lines) */
     .big{
       font-size: var(--taskFS);
       font-weight:900;
@@ -205,7 +211,6 @@
       -webkit-line-clamp:2;
     }
 
-    /* SMALL = Project (1 line) */
     .small{
       font-size: var(--projFS);
       color:#374151;
@@ -217,7 +222,6 @@
       opacity:.92;
     }
 
-    /* STRONG TODAY HIGHLIGHT */
     .board thead th.today{
       background:#111827;
       color:#ffffff;
@@ -229,7 +233,6 @@
       box-shadow:0 0 0 3px #111827;
     }
 
-    /* OFF styling */
     .cell.off{
       background:var(--off) !important;
       opacity:0.88;
@@ -252,11 +255,6 @@
     </div>
 
     <div class="tabs" id="tabs"></div>
-
-    <!-- Emergency toggle: allow scrolling if needed -->
-    <div style="display:flex; gap:10px; align-items:center;">
-      <button class="tab" id="scrollToggle" type="button">Scroll: OFF</button>
-    </div>
   </div>
 
   <div class="header-right">
@@ -287,7 +285,6 @@ let allRows = [];
 let selectedWeekStart = "";
 let lastEmployeeCount = 0;
 
-/* ---------- Auto-fit logic (prevents clipped rows in mirroring) ---------- */
 function applyAutoFit(numEmployees){
   lastEmployeeCount = numEmployees;
 
@@ -302,26 +299,27 @@ function applyAutoFit(numEmployees){
   const padTop = mainStyles ? parseFloat(mainStyles.paddingTop) : 18;
   const padBottom = mainStyles ? parseFloat(mainStyles.paddingBottom) : 18;
 
+  // Since main scrolls, we fit for "best default view" but we don't need perfection.
   const available = window.innerHeight - headerH - padTop - padBottom;
 
-  // measure actual thead height if possible
   const thead = table ? table.querySelector("thead") : null;
   let tableHeaderH = thead ? thead.getBoundingClientRect().height : 64;
   if (!tableHeaderH || tableHeaderH < 40) tableHeaderH = 64;
 
+  // Slightly tighter clamp to show more rows by default
   let rowH = Math.floor((available - tableHeaderH) / Math.max(numEmployees, 1));
-  rowH = Math.max(54, Math.min(92, rowH));
+  rowH = Math.max(50, Math.min(92, rowH));
 
   const setFromRowH = (h) => {
-    const nameFS = Math.max(14, Math.min(22, Math.floor(h * 0.26)));
-    const taskFS = Math.max(15, Math.min(24, Math.floor(h * 0.30)));
-    const projFS = Math.max(12, Math.min(18, Math.floor(h * 0.22)));
+    const nameFS = Math.max(13, Math.min(22, Math.floor(h * 0.26)));
+    const taskFS = Math.max(14, Math.min(24, Math.floor(h * 0.30)));
+    const projFS = Math.max(11, Math.min(18, Math.floor(h * 0.22)));
 
-    const cellPadY = Math.max(6, Math.min(14, Math.floor(h * 0.14)));
+    const cellPadY = Math.max(6, Math.min(14, Math.floor(h * 0.13)));
     const cellPadX = Math.max(8, Math.min(16, Math.floor(h * 0.18)));
     const cellGap  = Math.max(3, Math.min(7, Math.floor(h * 0.06)));
 
-    const empColW = Math.max(170, Math.min(230, Math.floor(window.innerWidth * 0.11)));
+    const empColW = Math.max(165, Math.min(230, Math.floor(window.innerWidth * 0.11)));
 
     const root = document.documentElement.style;
     root.setProperty("--rowH", `${h}px`);
@@ -334,32 +332,13 @@ function applyAutoFit(numEmployees){
     root.setProperty("--empColW", `${empColW}px`);
   };
 
-  // Apply once
   setFromRowH(rowH);
-
-  // Safety loop: if still too tall, shrink until it fits
-  const maxIterations = 14;
-  for (let i=0; i<maxIterations; i++){
-    const tbody = table ? table.querySelector("tbody") : null;
-    const bodyH = tbody ? tbody.getBoundingClientRect().height : (rowH * numEmployees);
-    const needed = tableHeaderH + bodyH;
-
-    if (needed <= available) break;
-
-    rowH -= 2;
-    if (rowH < 48) break;
-    setFromRowH(rowH);
-  }
 }
 
 window.addEventListener("resize", () => {
-  if (lastEmployeeCount) {
-    // wait a frame so sizes are accurate after resize/mirroring changes
-    requestAnimationFrame(() => applyAutoFit(lastEmployeeCount));
-  }
+  if (lastEmployeeCount) requestAnimationFrame(() => applyAutoFit(lastEmployeeCount));
 });
 
-/* ---------- CSV parsing + helpers ---------- */
 function normalizeDept(d=""){
   d = d.toLowerCase().trim();
   if (!d) return "";
@@ -456,7 +435,6 @@ function getCellBg(r){
   return "#ffffff";
 }
 
-/* ---------- Tabs + board rendering ---------- */
 function buildTabs(weekStarts, selected, onSelect){
   const el = document.getElementById("tabs");
   el.innerHTML = "";
@@ -490,7 +468,6 @@ function buildBoard(records){
 
   const today = getTodayAbbrev();
 
-  // Group by employee
   const byEmployee = new Map();
   for (const r of records){
     if (!r.employee) continue;
@@ -498,14 +475,12 @@ function buildBoard(records){
     byEmployee.get(r.employee).push(r);
   }
 
-  // Default dept for sorting
   const employeeDefaultDept = {};
   for (const [e, recs] of byEmployee.entries()){
     const ddRaw = recs.find(x => (x.default_department || "").trim() !== "")?.default_department || "";
     employeeDefaultDept[e] = normalizeDept(ddRaw);
   }
 
-  // Sort: dept rank then name
   const employees = [...byEmployee.keys()].sort((a,b)=>{
     const da = employeeDefaultDept[a];
     const db = employeeDefaultDept[b];
@@ -514,7 +489,6 @@ function buildBoard(records){
     return (ra - rb) || a.localeCompare(b);
   });
 
-  // Index employee -> day -> record
   const idx = new Map();
   for (const e of employees) idx.set(e, {});
   for (const r of records){
@@ -528,7 +502,6 @@ function buildBoard(records){
   const table = document.getElementById("board");
   table.innerHTML = "";
 
-  // Header
   const thead = document.createElement("thead");
   const hr = document.createElement("tr");
 
@@ -547,7 +520,6 @@ function buildBoard(records){
   thead.appendChild(hr);
   table.appendChild(thead);
 
-  // Body
   const tbody = document.createElement("tbody");
 
   for (const e of employees){
@@ -569,10 +541,7 @@ function buildBoard(records){
         const taskTxt = (r.task || "").trim();
         const projTxt = (r.project || "").trim();
 
-        const big = off
-          ? (taskTxt.toUpperCase().startsWith("PTO") ? "PTO" : "OFF")
-          : (taskTxt || projTxt);
-
+        const big = off ? (taskTxt.toUpperCase().startsWith("PTO") ? "PTO" : "OFF") : (taskTxt || projTxt);
         const small = off ? "" : (projTxt || "");
 
         td.innerHTML = `
@@ -591,7 +560,6 @@ function buildBoard(records){
 
   table.appendChild(tbody);
 
-  // ✅ Auto-fit AFTER DOM is in place (so measurements are accurate)
   requestAnimationFrame(() => applyAutoFit(employees.length));
 }
 
@@ -611,7 +579,6 @@ function render(){
   buildBoard(filtered);
 }
 
-/* ---------- Data refresh ---------- */
 async function init(){
   const res = await fetch(CSV_URL, {cache:"no-store"});
   const text = await res.text();
@@ -620,26 +587,6 @@ async function init(){
   render();
   setTimeout(init, 120000);
 }
-
-/* ---------- Scroll toggle ---------- */
-(function setupScrollToggle(){
-  const btn = document.getElementById("scrollToggle");
-  if (!btn) return;
-
-  let scrollOn = false;
-  const sync = () => {
-    document.body.classList.toggle("scroll-on", scrollOn);
-    btn.textContent = `Scroll: ${scrollOn ? "ON" : "OFF"}`;
-  };
-
-  btn.addEventListener("click", () => {
-    scrollOn = !scrollOn;
-    sync();
-  });
-
-  sync();
-})();
-
 init();
 </script>
 </body>

@@ -1,0 +1,223 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>USP Ops Board</title>
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#0f1b33; --grid:#1b2a4a; --text:#e9eefc; --muted:#a8b3d6;
+      --wh:#6aa9ff; --in:#63d27a; --tu:#f2b84b; --op:#b18cff; --tr:#9aa4b2; --off:#5b6577;
+    }
+    *{box-sizing:border-box;font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#060a14);color:var(--text);}
+    header{
+      display:flex;align-items:flex-end;justify-content:space-between;
+      padding:28px 34px 14px;border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    h1{margin:0;font-size:44px;letter-spacing:.5px}
+    .sub{color:var(--muted);font-size:18px;margin-top:6px}
+    .notes{color:var(--muted);font-size:18px;text-align:right}
+    main{padding:18px 24px 20px}
+    .board{
+      width:100%; border-collapse:separate; border-spacing:0;
+      table-layout:fixed;
+      background:rgba(255,255,255,.02);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:14px; overflow:hidden;
+    }
+    .board thead th{
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:14px 10px;
+      font-size:20px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .board th.person{
+      width:210px;text-align:left;padding-left:18px;
+    }
+    .board td, .board tbody th{
+      border-bottom:1px solid rgba(255,255,255,.06);
+      border-right:1px solid rgba(255,255,255,.06);
+      height:86px;
+      vertical-align:middle;
+      padding:10px 12px;
+      font-size:20px;
+    }
+    .board tbody th{
+      background:rgba(255,255,255,.02);
+      text-align:left;
+      padding-left:18px;
+      font-weight:700;
+      letter-spacing:.3px;
+    }
+    .cell{
+      height:100%;
+      border-radius:12px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:6px;
+      padding:12px 14px;
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.18);
+    }
+    .assignment{font-weight:800;font-size:22px;line-height:1.05}
+    .meta{color:rgba(255,255,255,.85);font-size:16px;line-height:1.1}
+    .legend{display:flex;gap:14px;flex-wrap:wrap;padding:14px 6px 0;color:var(--muted);font-size:16px}
+    .tag{display:flex;align-items:center;gap:8px}
+    .sw{width:18px;height:12px;border-radius:4px;border:1px solid rgba(255,255,255,.2)}
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>WEEKLY OPERATIONS SCHEDULE</h1>
+      <div class="sub" id="weekLabel">Loading week…</div>
+    </div>
+    <div class="notes" id="notesBox">USP Ops Board</div>
+  </header>
+
+  <main>
+    <table class="board" id="board"></table>
+    <div class="legend">
+      <div class="tag"><span class="sw" style="background:var(--wh)"></span>Warehouse</div>
+      <div class="tag"><span class="sw" style="background:var(--in)"></span>Install</div>
+      <div class="tag"><span class="sw" style="background:var(--tu)"></span>Turf</div>
+      <div class="tag"><span class="sw" style="background:var(--op)"></span>Operations</div>
+      <div class="tag"><span class="sw" style="background:var(--tr)"></span>Travel</div>
+      <div class="tag"><span class="sw" style="background:var(--off)"></span>Off</div>
+    </div>
+  </main>
+
+<script>
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS9dYykqhLDctkDUvYOrX5buK09uK1hHaryxnro6YiHltFPKyTCkd_ji_pWWdIPfy-XdlNB-XhTMv0-/pubhtml?gid=0&single=true";
+const DAYS = ["Mon","Tue","Wed","Thu","Fri"];
+
+const deptColorVar = (deptRaw) => {
+  const d = (deptRaw||"").trim().toLowerCase();
+  if (d.startsWith("ware")) return "var(--wh)";
+  if (d.startsWith("inst")) return "var(--in)";
+  if (d.startsWith("turf")) return "var(--tu)";
+  if (d.startsWith("op"))   return "var(--op)";
+  if (d.startsWith("trav")) return "var(--tr)";
+  if (d === "off" || d === "pto") return "var(--off)";
+  return "rgba(255,255,255,.08)";
+};
+
+function parseCSV(text){
+  // Minimal CSV parser that handles quoted commas.
+  const rows = [];
+  let row = [], cur = "", inQ = false;
+  for (let i=0;i<text.length;i++){
+    const c=text[i], n=text[i+1];
+    if (c === '"' && inQ && n === '"'){ cur+='"'; i++; continue; }
+    if (c === '"'){ inQ = !inQ; continue; }
+    if (c === ',' && !inQ){ row.push(cur); cur=""; continue; }
+    if ((c === '\n' || c === '\r') && !inQ){
+      if (cur.length || row.length){ row.push(cur); rows.push(row); }
+      row=[]; cur="";
+      continue;
+    }
+    cur += c;
+  }
+  if (cur.length || row.length){ row.push(cur); rows.push(row); }
+  const header = rows.shift().map(h=>h.trim());
+  return rows
+    .filter(r=>r.some(x => (x||"").trim() !== ""))
+    .map(r=>{
+      const obj={};
+      header.forEach((h,idx)=>obj[h]= (r[idx]||"").trim());
+      return obj;
+    });
+}
+
+function buildBoard(records){
+  // Assume you're filtering by a single week_start in the sheet (or we'll take the first one found).
+  const weekStart = (records[0]?.week_start) || "";
+  document.getElementById("weekLabel").textContent = weekStart ? `Week of ${weekStart}` : "Weekly view";
+
+  // Index: person -> day -> record
+  const people = [...new Set(records.map(r => r.person).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const idx = new Map();
+  for (const p of people) idx.set(p, {});
+  for (const r of records){
+    const p = r.person; if (!p) continue;
+    const day = (r.day||"").slice(0,3); // Mon/Tue/...
+    if (!DAYS.includes(day)) continue;
+    idx.get(p)[day] = r;
+  }
+
+  const table = document.getElementById("board");
+  table.innerHTML = "";
+
+  // Header
+  const thead = document.createElement("thead");
+  const hr = document.createElement("tr");
+  const th0 = document.createElement("th");
+  th0.className = "person";
+  th0.textContent = "PERSON";
+  hr.appendChild(th0);
+  for (const d of DAYS){
+    const th = document.createElement("th");
+    th.textContent = d.toUpperCase();
+    hr.appendChild(th);
+  }
+  thead.appendChild(hr);
+  table.appendChild(thead);
+
+  // Body
+  const tbody = document.createElement("tbody");
+  for (const p of people){
+    const tr = document.createElement("tr");
+    const th = document.createElement("th");
+    th.textContent = p.toUpperCase();
+    tr.appendChild(th);
+
+    for (const d of DAYS){
+      const td = document.createElement("td");
+      const r = idx.get(p)[d];
+      const assignment = r?.assignment || "";
+      const loc = r?.location || "";
+      const dept = r?.dept || "";
+
+      const card = document.createElement("div");
+      card.className = "cell";
+      card.style.background = deptColorVar(dept);
+      card.style.opacity = (assignment.toLowerCase()==="off") ? "0.65" : "1";
+
+      const a = document.createElement("div");
+      a.className = "assignment";
+      a.textContent = assignment || "";
+      const m = document.createElement("div");
+      m.className = "meta";
+      m.textContent = loc ? loc : (dept ? dept : "");
+
+      card.appendChild(a);
+      if (m.textContent) card.appendChild(m);
+      td.appendChild(card);
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+}
+
+async function init(){
+  const res = await fetch(CSV_URL, {cache:"no-store"});
+  const text = await res.text();
+  const recs = parseCSV(text);
+
+  // If your sheet contains multiple weeks, filter to the latest week_start found:
+  const weeks = [...new Set(recs.map(r=>r.week_start).filter(Boolean))].sort();
+  const latest = weeks[weeks.length-1];
+  const filtered = latest ? recs.filter(r=>r.week_start===latest) : recs;
+
+  buildBoard(filtered);
+  // auto-refresh every 2 minutes
+  setTimeout(init, 120000);
+}
+init();
+</script>
+</body>
+</html>

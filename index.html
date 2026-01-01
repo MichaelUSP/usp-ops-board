@@ -33,7 +33,7 @@
       display:flex;
       justify-content:space-between;
       align-items:center;
-      padding:22px 36px 14px;
+      padding:18px 28px 14px;
       border-bottom:2px solid var(--grid);
       background:#ffffff;
       gap:18px;
@@ -44,9 +44,10 @@
       flex-direction:column;
       gap:10px;
       min-width:0;
+      flex: 1 1 auto;
     }
 
-    h1{ margin:0; font-size:42px; letter-spacing:.4px; }
+    h1{ margin:0; font-size:40px; letter-spacing:.4px; }
     .sub{ font-size:18px; color:var(--muted); }
 
     .tabs{
@@ -74,14 +75,40 @@
       border-color:#111827;
     }
 
+    /* Header right area: legend + logo */
+    .header-right{
+      display:flex;
+      align-items:center;
+      gap:18px;
+      flex: 0 0 auto;
+    }
+
+    .legend{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+      font-size:13px;
+      color:var(--muted);
+      max-width: 520px;
+    }
+
+    .tag{display:flex;align-items:center;gap:6px}
+    .sw{
+      width:16px;height:11px;border-radius:4px;
+      border:1px solid rgba(0,0,0,.2);
+      flex: 0 0 auto;
+    }
+
     .logo{
-      height:52px;
+      height:50px;
       width:auto;
       object-fit:contain;
       flex:0 0 auto;
     }
 
-    main{ padding:20px 28px; }
+    main{ padding:18px 22px; }
 
     .board{
       width:100%;
@@ -102,7 +129,7 @@
       text-align:center;
     }
 
-    .board th.person{
+    .board th.employee{
       width:210px;
       text-align:left;
       padding-left:18px;
@@ -141,7 +168,7 @@
       line-height:1.05;
     }
 
-    /* SMALL = Project — Location */
+    /* SMALL = Project */
     .small{
       font-size:16px;
       color:#374151;
@@ -174,21 +201,6 @@
     .cell.off .small{
       color:rgba(17,24,39,.65);
     }
-
-    /* Legend */
-    .legend{
-      display:flex;
-      gap:18px;
-      flex-wrap:wrap;
-      padding:18px 8px 0;
-      font-size:16px;
-      color:var(--muted);
-    }
-    .tag{display:flex;align-items:center;gap:8px}
-    .sw{
-      width:18px;height:12px;border-radius:4px;
-      border:1px solid rgba(0,0,0,.2);
-    }
   </style>
 </head>
 
@@ -204,22 +216,25 @@
     <div class="tabs" id="tabs"></div>
   </div>
 
-  <!-- Logo on the RIGHT -->
-  <img src="./usp-logo.png" alt="Urban Soccer Park" class="logo" />
+  <div class="header-right">
+    <!-- Legend moved to header -->
+    <div class="legend" aria-label="Color legend">
+      <div class="tag"><span class="sw" style="background:var(--op)"></span>Ops</div>
+      <div class="tag"><span class="sw" style="background:var(--wh)"></span>WH</div>
+      <div class="tag"><span class="sw" style="background:var(--in)"></span>Inst</div>
+      <div class="tag"><span class="sw" style="background:var(--tu)"></span>Turf</div>
+      <div class="tag"><span class="sw" style="background:var(--we)"></span>Well</div>
+      <div class="tag"><span class="sw" style="background:var(--tr)"></span>Travel</div>
+      <div class="tag"><span class="sw" style="background:var(--off)"></span>Off</div>
+    </div>
+
+    <!-- Logo on the RIGHT -->
+    <img src="./usp-logo.png" alt="Urban Soccer Park" class="logo" />
+  </div>
 </header>
 
 <main>
   <table class="board" id="board"></table>
-
-  <div class="legend">
-    <div class="tag"><span class="sw" style="background:var(--op)"></span>Operations</div>
-    <div class="tag"><span class="sw" style="background:var(--wh)"></span>Warehouse</div>
-    <div class="tag"><span class="sw" style="background:var(--in)"></span>Installation</div>
-    <div class="tag"><span class="sw" style="background:var(--tu)"></span>Turf</div>
-    <div class="tag"><span class="sw" style="background:var(--we)"></span>Wellness</div>
-    <div class="tag"><span class="sw" style="background:var(--tr)"></span>Travel</div>
-    <div class="tag"><span class="sw" style="background:var(--off)"></span>Off / PTO</div>
-  </div>
 </main>
 
 <script>
@@ -278,9 +293,10 @@ function parseCSV(text){
 
   const rawHeader = (rows.shift() || []).map(h => (h||"").trim().toLowerCase());
   const header = rawHeader.map(h => {
+    // Map known fields to code-friendly keys
     if (h === "default department") return "default_department";
     if (h === "department") return "dept";
-    if (h === "name" || h === "employee") return "person";
+    if (h === "person" || h === "employee") return "employee";
     if (h === "week" || h === "week of") return "week_start";
     return h.replace(/\s+/g, "_");
   });
@@ -336,8 +352,7 @@ function buildTabs(weekStarts, selected, onSelect){
   const thisMon = mondayOfThisWeekISO();
   const idxThis = weekStarts.indexOf(thisMon);
 
-  // Prefer labeling based on actual Monday match when possible
-  const thisWeek = (idxThis !== -1) ? thisMon : weekStarts[weekStarts.length - 2] || weekStarts[0];
+  const thisWeek = (idxThis !== -1) ? thisMon : (weekStarts[weekStarts.length - 2] || weekStarts[0]);
   const nextWeek = (idxThis !== -1)
     ? (weekStarts[idxThis + 1] || weekStarts[weekStarts.length - 1])
     : (weekStarts[weekStarts.length - 1] || weekStarts[0]);
@@ -345,7 +360,7 @@ function buildTabs(weekStarts, selected, onSelect){
   const tabDefs = [
     {label:"This Week", week_start:thisWeek},
     {label:"Next Week", week_start:nextWeek}
-  ].filter((t, i, arr) => t.week_start && arr.findIndex(x => x.week_start === t.week_start) === i); // unique
+  ].filter((t, i, arr) => t.week_start && arr.findIndex(x => x.week_start === t.week_start) === i);
 
   for (const t of tabDefs){
     const btn = document.createElement("button");
@@ -362,39 +377,39 @@ function buildBoard(records){
 
   const today = getTodayAbbrev();
 
-  // Group records by person
-  const byPerson = new Map();
+  // Group records by employee
+  const byEmployee = new Map();
   for (const r of records){
-    if (!r.person) continue;
-    if (!byPerson.has(r.person)) byPerson.set(r.person, []);
-    byPerson.get(r.person).push(r);
+    if (!r.employee) continue;
+    if (!byEmployee.has(r.employee)) byEmployee.set(r.employee, []);
+    byEmployee.get(r.employee).push(r);
   }
 
-  // Default dept per person: always prefer default_department
-  const personDefaultDept = {};
-  for (const [p, recs] of byPerson.entries()){
-    const dd = normalizeDept(recs.find(x => (x.default_department || "").trim() !== "")?.default_department || "");
-    personDefaultDept[p] = dd;
+  // Default dept per employee: always prefer default_department
+  const employeeDefaultDept = {};
+  for (const [e, recs] of byEmployee.entries()){
+    const ddRaw = recs.find(x => (x.default_department || "").trim() !== "")?.default_department || "";
+    employeeDefaultDept[e] = normalizeDept(ddRaw);
   }
 
-  // Sort: dept rank then name
-  const people = [...byPerson.keys()].sort((a,b)=>{
-    const da = personDefaultDept[a];
-    const db = personDefaultDept[b];
+  // Sort: dept rank then employee name
+  const employees = [...byEmployee.keys()].sort((a,b)=>{
+    const da = employeeDefaultDept[a];
+    const db = employeeDefaultDept[b];
     const ra = DEPT_RANK[da] ?? 9999;
     const rb = DEPT_RANK[db] ?? 9999;
     return (ra - rb) || a.localeCompare(b);
   });
 
-  // Index: person -> day -> record
+  // Index: employee -> day -> record
   const idx = new Map();
-  for (const p of people) idx.set(p, {});
+  for (const e of employees) idx.set(e, {});
   for (const r of records){
-    const p = r.person;
-    if (!p) continue;
+    const e = r.employee;
+    if (!e) continue;
     const d = normDay(r.day);
     if (!DAYS.includes(d)) continue;
-    idx.get(p)[d] = r;
+    idx.get(e)[d] = r;
   }
 
   const table = document.getElementById("board");
@@ -405,8 +420,8 @@ function buildBoard(records){
   const hr = document.createElement("tr");
 
   const th0 = document.createElement("th");
-  th0.className = "person";
-  th0.textContent = "PERSON";
+  th0.className = "employee";
+  th0.textContent = "EMPLOYEE";
   hr.appendChild(th0);
 
   for (const d of DAYS){
@@ -422,31 +437,30 @@ function buildBoard(records){
   // Body
   const tbody = document.createElement("tbody");
 
-  for (const p of people){
+  for (const e of employees){
     const tr = document.createElement("tr");
 
     const th = document.createElement("th");
-    th.textContent = p.toUpperCase();
+    th.textContent = e.toUpperCase();
     tr.appendChild(th);
 
     for (const d of DAYS){
       const td = document.createElement("td");
       if (d === today) td.classList.add("today");
 
-      const r = idx.get(p)[d];
+      const r = idx.get(e)[d];
       if (r){
         const off = isOffRow(r);
         const bg = getCellBg(r);
 
         const taskTxt = (r.task || "").trim();
         const projTxt = (r.project || "").trim();
-        const locTxt  = (r.location || "").trim();
 
         // BIG = Task (or OFF/PTO)
         const big = off ? (taskTxt.toUpperCase().startsWith("PTO") ? "PTO" : "OFF") : (taskTxt || projTxt);
 
-        // SMALL = Project — Location
-        const small = off ? "" : (projTxt ? (locTxt ? `${projTxt} — ${locTxt}` : projTxt) : (locTxt || ""));
+        // SMALL = Project
+        const small = off ? "" : (projTxt || "");
 
         td.innerHTML = `
           <div class="cell ${off ? "off" : ""}" style="background:${bg}">
@@ -490,7 +504,6 @@ async function init(){
   allRows = parseCSV(text);
 
   render();
-
   setTimeout(init, 120000);
 }
 init();

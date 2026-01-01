@@ -14,20 +14,16 @@
       --text:#111827;
       --muted:#4b5563;
 
-      /* Dept colors (cell backgrounds) */
-      --wh:#dbeafe;   /* Warehouse – blue */
-      --in:#fde68a;   /* Installation – yellow */
-      --tu:#bbf7d0;   /* Turf – green */
-      --op:#e9d5ff;   /* Operations – purple */
-      --we:#ffe4e6;   /* Wellness – soft rose */
+      /* Dept colors */
+      --wh:#dbeafe;   /* Warehouse */
+      --in:#fde68a;   /* Installation */
+      --tu:#bbf7d0;   /* Turf */
+      --op:#e9d5ff;   /* Operations */
+      --we:#ffe4e6;   /* Wellness */
 
       /* Status colors */
       --tr:#cffafe;   /* Travel – aqua */
-      --off:#f1f5f9;  /* Off – muted slate */
-
-      /* Divider styling */
-      --divider:#111827;
-      --dividerText:#ffffff;
+      --off:#f1f5f9;  /* Off */
     }
 
     *{ box-sizing:border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
@@ -36,13 +32,29 @@
     header{
       display:flex;
       justify-content:space-between;
-      align-items:flex-end;
-      padding:28px 36px 16px;
+      align-items:center;
+      padding:22px 36px 14px;
       border-bottom:2px solid var(--grid);
       background:#ffffff;
+      gap:18px;
     }
+
+    .header-left{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width: 0;
+    }
+
     h1{ margin:0; font-size:42px; letter-spacing:.4px; }
-    .sub{ margin-top:6px; font-size:18px; color:var(--muted); }
+    .sub{ font-size:18px; color:var(--muted); }
+
+    .logo{
+      height:52px;
+      width:auto;
+      object-fit:contain;
+      flex:0 0 auto;
+    }
 
     main{ padding:20px 28px; }
 
@@ -138,21 +150,6 @@
       color:rgba(17,24,39,.65);
     }
 
-    /* Department divider row */
-    .divider th{
-      background:var(--divider);
-      color:var(--dividerText);
-      font-size:18px;
-      letter-spacing:.6px;
-      text-transform:uppercase;
-      padding:12px 18px;
-      border-right:none !important;
-      border-bottom:2px solid rgba(255,255,255,.10);
-    }
-    .divider th span{
-      opacity:0.9;
-    }
-
     /* Legend */
     .legend{
       display:flex;
@@ -172,15 +169,14 @@
 
 <body>
 <header>
-  <div class="header-right">
-    <img src="usp-logo.png" alt="Urban Soccer Park" class="logo" />
-    <div>
-      <h1>USP Operations Weekly Schedule</h1>
-      <div class="sub" id="weekLabel">Loading week…</div>
-    </div>
+  <div class="header-left">
+    <h1>USP Operations Weekly Schedule</h1>
+    <div class="sub" id="weekLabel">Loading week…</div>
   </div>
-</header>
 
+  <!-- Logo on the RIGHT -->
+  <img src="./usp-logo.png" alt="Urban Soccer Park" class="logo" />
+</header>
 
 <main>
   <table class="board" id="board"></table>
@@ -200,21 +196,13 @@
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS9dYykqhLDctkDUvYOrX5buK09uK1hHaryxnro6YiHltFPKyTCkd_ji_pWWdIPfy-XdlNB-XhTMv0-/pub?gid=0&single=true&output=csv";
 const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
-/* Requested department order */
+/* Department order requested */
 const DEPT_RANK = {
   operations: 1,
   warehouse: 2,
   installation: 3,
   turf: 4,
   wellness: 5
-};
-
-const DEPT_LABEL = {
-  operations: "Operations",
-  warehouse: "Warehouse",
-  installation: "Installation",
-  turf: "Turf",
-  wellness: "Wellness"
 };
 
 function normalizeDept(d=""){
@@ -225,7 +213,7 @@ function normalizeDept(d=""){
   if (d.startsWith("inst")) return "installation";
   if (d.startsWith("turf")) return "turf";
   if (d.startsWith("well")) return "wellness";
-  return d; // keep as-is for unknowns
+  return d;
 }
 
 function getTodayAbbrev(){
@@ -253,8 +241,8 @@ function parseCSV(text){
 
   const rawHeader = (rows.shift() || []).map(h => (h||"").trim().toLowerCase());
   const header = rawHeader.map(h => {
-    if (h === "department") return "dept";
     if (h === "default department") return "default_department";
+    if (h === "department") return "dept";
     if (h === "name" || h === "employee") return "person";
     if (h === "week" || h === "week of") return "week_start";
     return h.replace(/\s+/g, "_");
@@ -302,26 +290,6 @@ function getCellBg(r){
   return "#ffffff";
 }
 
-function pickDefaultDeptForPerson(recordsForPerson){
-  // Prefer explicit default_department if present in any row (works even if person is OFF all week)
-  for (const r of recordsForPerson){
-    const dd = normalizeDept(r.default_department || "");
-    if (dd) return dd;
-  }
-
-  // Otherwise pick most frequent non-off/non-travel dept from their assignment rows
-  const counts = {};
-  for (const r of recordsForPerson){
-    const d = normalizeDept(r.dept || "");
-    if (!d) continue;
-    if (d === "off") continue;
-    if (d.startsWith("trav")) continue;
-    counts[d] = (counts[d] || 0) + 1;
-  }
-  const best = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0];
-  return best || "";
-}
-
 function buildBoard(records){
   const weekStart = (records[0]?.week_start) || "";
   document.getElementById("weekLabel").textContent = weekStart ? `Week of ${weekStart}` : "";
@@ -336,10 +304,11 @@ function buildBoard(records){
     byPerson.get(r.person).push(r);
   }
 
-  // Determine default dept per person (includes off-only people via default_department)
+  // Default dept per person: always prefer default_department from CSV (even for off-only people)
   const personDefaultDept = {};
   for (const [p, recs] of byPerson.entries()){
-    personDefaultDept[p] = pickDefaultDeptForPerson(recs);
+    const dd = normalizeDept(recs.find(x => (x.default_department || "").trim() !== "")?.default_department || "");
+    personDefaultDept[p] = dd;
   }
 
   // Sort people: dept rank, then name
@@ -384,29 +353,10 @@ function buildBoard(records){
   thead.appendChild(hr);
   table.appendChild(thead);
 
-  // Body with department divider rows
+  // Body (no department divider rows)
   const tbody = document.createElement("tbody");
 
-  let lastDeptRank = null;
   for (const p of people){
-    const deptKey = personDefaultDept[p] || "";
-    const deptRank = DEPT_RANK[deptKey] ?? 9999;
-
-    // Insert divider when dept group changes
-    if (deptRank !== lastDeptRank){
-      lastDeptRank = deptRank;
-
-      const divTr = document.createElement("tr");
-      divTr.className = "divider";
-
-      const divTh = document.createElement("th");
-      divTh.colSpan = 1 + DAYS.length;
-      divTh.innerHTML = `<span>${DEPT_LABEL[deptKey] || (deptKey ? deptKey : "Other")}</span>`;
-      divTr.appendChild(divTh);
-
-      tbody.appendChild(divTr);
-    }
-
     const tr = document.createElement("tr");
 
     const th = document.createElement("th");

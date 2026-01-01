@@ -28,16 +28,8 @@
       --off:#f1f5f9;  /* Off – muted slate */
     }
 
-    *{
-      box-sizing:border-box;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-    }
-
-    body{
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
-    }
+    *{ box-sizing:border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    body{ margin:0; background:var(--bg); color:var(--text); }
 
     header{
       display:flex;
@@ -47,24 +39,11 @@
       border-bottom:2px solid var(--grid);
       background:#ffffff;
     }
+    h1{ margin:0; font-size:42px; letter-spacing:.4px; }
+    .sub{ margin-top:6px; font-size:18px; color:var(--muted); }
 
-    h1{
-      margin:0;
-      font-size:42px;
-      letter-spacing:.4px;
-    }
+    main{ padding:20px 28px; }
 
-    .sub{
-      margin-top:6px;
-      font-size:18px;
-      color:var(--muted);
-    }
-
-    main{
-      padding:20px 28px;
-    }
-
-    /* BOARD TABLE */
     .board{
       width:100%;
       table-layout:fixed;
@@ -90,23 +69,21 @@
       padding-left:18px;
     }
 
-    .board td,
-    .board tbody th{
-      height:90px;               /* row height */
+    .board td, .board tbody th{
+      height:90px;
       padding:12px;
       border-right:1px solid var(--grid);
       border-bottom:1px solid var(--grid);
       vertical-align:middle;
-      font-size:20px;
     }
 
     .board tbody th{
       font-weight:700;
       letter-spacing:.4px;
       background:#ffffff;
+      font-size:20px;
     }
 
-    /* Assignment card */
     .cell{
       height:100%;
       border-radius:12px;
@@ -118,22 +95,21 @@
       border:1px solid rgba(0,0,0,.08);
     }
 
-    .project{
+    /* BIG: Task */
+    .taskBig{
       font-size:22px;
       font-weight:900;
       line-height:1.05;
     }
 
-    .task{
+    /* SMALL: Project — Location */
+    .metaLine{
       font-size:16px;
       color:#374151;
       line-height:1.1;
-    }
-
-    .loc{
-      font-size:14px;
-      color:#6b7280;
-      line-height:1.1;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     /* STRONG TODAY HIGHLIGHT */
@@ -141,25 +117,22 @@
       background:#111827;
       color:#ffffff;
     }
-
     .board td.today{
-      background:#fef3c7; /* warm highlight behind cells */
+      background:#fef3c7; /* warm highlight behind the cell area */
     }
-
     .board td.today .cell{
       box-shadow:0 0 0 3px #111827;
     }
 
-    /* OFF styling (always obvious, muted) */
+    /* OFF styling (always muted + obvious) */
     .cell.off{
       background:var(--off) !important;
-      opacity:0.85;
+      opacity:0.88;
       border:2px dashed rgba(17,24,39,.35);
-      filter:grayscale(.15);
+      filter:grayscale(.10);
     }
-    .cell.off .project,
-    .cell.off .task,
-    .cell.off .loc{
+    .cell.off .taskBig,
+    .cell.off .metaLine{
       color:rgba(17,24,39,.65);
     }
 
@@ -205,18 +178,15 @@
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS9dYykqhLDctkDUvYOrX5buK09uK1hHaryxnro6YiHltFPKyTCkd_ji_pWWdIPfy-XdlNB-XhTMv0-/pub?gid=0&single=true&output=csv";
 const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
-/* ---------- helpers ---------- */
-
 function getTodayAbbrev(){
   const map = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
   return map[new Date().getDay()];
 }
 
 function parseCSV(text){
-  // Robust CSV parser: handles quoted commas and quotes
+  // Robust CSV parser (handles quoted commas)
   const rows = [];
   let row = [], cur = "", inQ = false;
-
   for (let i=0; i<text.length; i++){
     const c = text[i], n = text[i+1];
     if (c === '"' && inQ && n === '"'){ cur += '"'; i++; continue; }
@@ -233,8 +203,6 @@ function parseCSV(text){
 
   const rawHeader = (rows.shift() || []).map(h => (h||"").trim().toLowerCase());
   const header = rawHeader.map(h => {
-    // Map any synonyms just in case
-    if (h === "default department") return "dept";
     if (h === "department") return "dept";
     if (h === "name" || h === "employee") return "person";
     if (h === "week" || h === "week of") return "week_start";
@@ -258,22 +226,22 @@ function normDay(x){
 }
 
 function isOffRow(r){
-  const t = ((r.task || "") + " " + (r.project || "")).toLowerCase().trim();
-  return t === "off" || t === "pto" || t.startsWith("off ") || t.startsWith("pto ");
+  const dept = (r.dept || "").toLowerCase().trim();
+  const task = ((r.task || "")).toLowerCase().trim();
+  // Either dept forced to "Off" by formula OR task begins with OFF/PTO
+  return dept === "off" || task === "off" || task === "pto" || task.startsWith("off ") || task.startsWith("pto ");
 }
 
 function isTravelRow(r){
   const dept = (r.dept || "").toLowerCase().trim();
-  const t = ((r.task || "") + " " + (r.project || "")).toLowerCase().trim();
-  return dept.startsWith("trav") || t.includes("travel");
+  const task = ((r.task || "") + " " + (r.project || "")).toLowerCase();
+  return dept.startsWith("trav") || task.includes("travel");
 }
 
 function getCellBg(r){
-  // Status overrides win first
   if (isOffRow(r)) return "var(--off)";
   if (isTravelRow(r)) return "var(--tr)";
 
-  // Dept-based colors
   const d = (r.dept || "").toLowerCase().trim();
   if (d.startsWith("ware")) return "var(--wh)";
   if (d.startsWith("inst")) return "var(--in)";   // swapped
@@ -283,20 +251,15 @@ function getCellBg(r){
   return "#ffffff";
 }
 
-/* ---------- render ---------- */
-
 function buildBoard(records){
   const weekStart = (records[0]?.week_start) || "";
-  document.getElementById("weekLabel").textContent =
-    weekStart ? `Week of ${weekStart}` : "";
+  document.getElementById("weekLabel").textContent = weekStart ? `Week of ${weekStart}` : "";
 
   const today = getTodayAbbrev();
 
-  // Sort + unique people
   const people = [...new Set(records.map(r => r.person).filter(Boolean))]
     .sort((a,b)=>a.localeCompare(b));
 
-  // index: person -> day -> record
   const idx = new Map();
   for (const p of people) idx.set(p, {});
   for (const r of records){
@@ -344,24 +307,23 @@ function buildBoard(records){
 
       const r = idx.get(p)[d];
       if (r){
-        const bg = getCellBg(r);
         const off = isOffRow(r);
+        const bg = getCellBg(r);
 
-        // Display rules:
-        // - If OFF/PTO: show "OFF" big, (optional) keep project/task blanked
-        // - Else: project big, task small, location optional
         const taskTxt = (r.task || "").trim();
         const projTxt = (r.project || "").trim();
         const locTxt  = (r.location || "").trim();
 
-        const big = off ? (taskTxt.toUpperCase().startsWith("PTO") ? "PTO" : "OFF") : projTxt;
-        const small = off ? "" : taskTxt;
+        // BIG line: Task (or OFF/PTO)
+        const big = off ? (taskTxt.toUpperCase().startsWith("PTO") ? "PTO" : "OFF") : (taskTxt || projTxt);
+
+        // SMALL line: Project — Location (location on same line)
+        const meta = off ? "" : (projTxt ? (locTxt ? `${projTxt} — ${locTxt}` : projTxt) : (locTxt || ""));
 
         td.innerHTML = `
           <div class="cell ${off ? "off" : ""}" style="background:${bg}">
-            <div class="project">${big || ""}</div>
-            ${small ? `<div class="task">${small}</div>` : ``}
-            ${(!off && locTxt) ? `<div class="loc">${locTxt}</div>` : ``}
+            <div class="taskBig">${big || ""}</div>
+            ${meta ? `<div class="metaLine">${meta}</div>` : ``}
           </div>
         `;
       }
@@ -380,14 +342,12 @@ async function init(){
   const text = await res.text();
   const recs = parseCSV(text);
 
-  // If multiple weeks exist, show the latest (works if week_start is YYYY-MM-DD)
+  // If multiple weeks exist, show latest (works if week_start is YYYY-MM-DD)
   const weeks = [...new Set(recs.map(r=>r.week_start).filter(Boolean))].sort();
   const latest = weeks[weeks.length-1];
   const filtered = latest ? recs.filter(r=>r.week_start===latest) : recs;
 
   buildBoard(filtered);
-
-  // Auto-refresh every 2 minutes
   setTimeout(init, 120000);
 }
 init();

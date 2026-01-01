@@ -9,10 +9,10 @@
     :root{
       /* Light theme */
       --bg:#ffffff;
-      --panel:#f5f7fb;
-      --grid:#e1e5ee;
+      --panel:#f3f6fb;
+      --grid:#d7dde9;
       --text:#111827;
-      --muted:#4b5563;
+      --muted:#374151;
 
       /* Dept colors */
       --wh:#dbeafe;   /* Warehouse */
@@ -22,50 +22,75 @@
       --we:#ffe4e6;   /* Wellness */
 
       /* Status colors */
-      --tr:#cffafe;   /* Travel – aqua */
+      --tr:#cffafe;   /* Travel */
       --off:#f1f5f9;  /* Off */
+
+      /* TV scaling base (updated by JS) */
+      --tv: 1;
     }
 
-    *{ box-sizing:border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
-    body{ margin:0; background:var(--bg); color:var(--text); }
+    *{
+      box-sizing:border-box;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      overflow:hidden; /* TV: avoid scrollbars */
+      user-select:none; /* TV: prevent blue highlights */
+    }
 
     header{
       display:flex;
       justify-content:space-between;
       align-items:center;
-      padding:18px 28px 14px;
-      border-bottom:2px solid var(--grid);
+      padding: calc(18px * var(--tv)) calc(26px * var(--tv)) calc(12px * var(--tv));
+      border-bottom: calc(2px * var(--tv)) solid var(--grid);
       background:#ffffff;
-      gap:18px;
+      gap: calc(16px * var(--tv));
     }
 
     .header-left{
       display:flex;
       flex-direction:column;
-      gap:10px;
+      gap: calc(10px * var(--tv));
       min-width:0;
       flex: 1 1 auto;
     }
 
-    h1{ margin:0; font-size:40px; letter-spacing:.4px; }
-    .sub{ font-size:18px; color:var(--muted); }
+    h1{
+      margin:0;
+      font-size: calc(44px * var(--tv));
+      letter-spacing:.4px;
+      line-height:1.05;
+    }
+
+    .sub{
+      font-size: calc(20px * var(--tv));
+      color:var(--muted);
+      font-weight:600;
+    }
 
     .tabs{
       display:flex;
-      gap:10px;
+      gap: calc(10px * var(--tv));
       align-items:center;
       flex-wrap:wrap;
     }
 
     .tab{
       appearance:none;
-      border:1px solid var(--grid);
+      border: calc(2px * var(--tv)) solid var(--grid);
       background:#ffffff;
       color:var(--text);
-      padding:10px 14px;
+      padding: calc(10px * var(--tv)) calc(16px * var(--tv));
       border-radius:999px;
-      font-weight:700;
-      font-size:14px;
+      font-weight:800;
+      font-size: calc(16px * var(--tv));
       cursor:pointer;
     }
 
@@ -75,40 +100,44 @@
       border-color:#111827;
     }
 
-    /* Header right area: legend + logo */
     .header-right{
       display:flex;
       align-items:center;
-      gap:18px;
+      gap: calc(16px * var(--tv));
       flex: 0 0 auto;
     }
 
     .legend{
       display:flex;
-      gap:12px;
+      gap: calc(12px * var(--tv));
       flex-wrap:wrap;
       align-items:center;
       justify-content:flex-end;
-      font-size:13px;
+      font-size: calc(15px * var(--tv));
       color:var(--muted);
-      max-width: 520px;
+      font-weight:700;
+      max-width: calc(640px * var(--tv));
     }
 
-    .tag{display:flex;align-items:center;gap:6px}
+    .tag{display:flex;align-items:center;gap: calc(7px * var(--tv));}
     .sw{
-      width:16px;height:11px;border-radius:4px;
-      border:1px solid rgba(0,0,0,.2);
+      width: calc(18px * var(--tv));
+      height: calc(12px * var(--tv));
+      border-radius: calc(5px * var(--tv));
+      border: calc(2px * var(--tv)) solid rgba(0,0,0,.18);
       flex: 0 0 auto;
     }
 
     .logo{
-      height:50px;
+      height: calc(56px * var(--tv));
       width:auto;
       object-fit:contain;
       flex:0 0 auto;
     }
 
-    main{ padding:18px 22px; }
+    main{
+      padding: calc(16px * var(--tv)) calc(18px * var(--tv));
+    }
 
     .board{
       width:100%;
@@ -116,66 +145,77 @@
       border-collapse:separate;
       border-spacing:0;
       background:#ffffff;
-      border:2px solid var(--grid);
-      border-radius:14px;
+      border: calc(3px * var(--tv)) solid var(--grid);
+      border-radius: calc(16px * var(--tv));
       overflow:hidden;
     }
 
     .board thead th{
       background:var(--panel);
-      padding:14px 10px;
-      font-size:20px;
-      border-bottom:2px solid var(--grid);
+      padding: calc(14px * var(--tv)) calc(10px * var(--tv));
+      font-size: calc(22px * var(--tv));
+      border-bottom: calc(3px * var(--tv)) solid var(--grid);
       text-align:center;
+      font-weight:900;
+      letter-spacing:.6px;
     }
 
     .board th.employee{
-      width:210px;
+      width: calc(240px * var(--tv));
       text-align:left;
-      padding-left:18px;
+      padding-left: calc(18px * var(--tv));
     }
 
     .board td, .board tbody th{
-      height:90px;
-      padding:12px;
-      border-right:1px solid var(--grid);
-      border-bottom:1px solid var(--grid);
+      height: calc(102px * var(--tv)); /* bigger rows for TV */
+      padding: calc(12px * var(--tv));
+      border-right: calc(2px * var(--tv)) solid var(--grid);
+      border-bottom: calc(2px * var(--tv)) solid var(--grid);
       vertical-align:middle;
     }
 
     .board tbody th{
-      font-weight:700;
-      letter-spacing:.4px;
+      font-weight:900;
+      letter-spacing:.6px;
       background:#ffffff;
-      font-size:20px;
+      font-size: calc(22px * var(--tv));
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     .cell{
       height:100%;
-      border-radius:12px;
-      padding:14px 16px;
+      border-radius: calc(14px * var(--tv));
+      padding: calc(14px * var(--tv)) calc(16px * var(--tv));
       display:flex;
       flex-direction:column;
       justify-content:center;
-      gap:6px;
-      border:1px solid rgba(0,0,0,.08);
+      gap: calc(7px * var(--tv));
+      border: calc(2px * var(--tv)) solid rgba(0,0,0,.10);
     }
 
     /* BIG = Task */
     .big{
-      font-size:22px;
-      font-weight:900;
+      font-size: calc(24px * var(--tv));
+      font-weight:1000;
       line-height:1.05;
+      letter-spacing:.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     /* SMALL = Project */
     .small{
-      font-size:16px;
-      color:#374151;
+      font-size: calc(18px * var(--tv));
+      color:#1f2937;
+      font-weight:700;
       line-height:1.1;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
+      opacity:.92;
     }
 
     /* STRONG TODAY HIGHLIGHT */
@@ -184,18 +224,18 @@
       color:#ffffff;
     }
     .board td.today{
-      background:#fef3c7;
+      background:#fde68a; /* warmer, stronger for TV */
     }
     .board td.today .cell{
-      box-shadow:0 0 0 3px #111827;
+      box-shadow: 0 0 0 calc(4px * var(--tv)) #111827;
     }
 
     /* OFF styling */
     .cell.off{
       background:var(--off) !important;
-      opacity:0.88;
-      border:2px dashed rgba(17,24,39,.35);
-      filter:grayscale(.10);
+      opacity:0.90;
+      border: calc(3px * var(--tv)) dashed rgba(17,24,39,.35);
+      filter:grayscale(.08);
     }
     .cell.off .big,
     .cell.off .small{
@@ -211,13 +251,10 @@
       <h1>USP Operations Weekly Schedule</h1>
       <div class="sub" id="weekLabel">Loading week…</div>
     </div>
-
-    <!-- Tabs render here -->
     <div class="tabs" id="tabs"></div>
   </div>
 
   <div class="header-right">
-    <!-- Legend moved to header -->
     <div class="legend" aria-label="Color legend">
       <div class="tag"><span class="sw" style="background:var(--op)"></span>Ops</div>
       <div class="tag"><span class="sw" style="background:var(--wh)"></span>WH</div>
@@ -228,7 +265,6 @@
       <div class="tag"><span class="sw" style="background:var(--off)"></span>Off</div>
     </div>
 
-    <!-- Logo on the RIGHT -->
     <img src="./usp-logo.png" alt="Urban Soccer Park" class="logo" />
   </div>
 </header>
@@ -240,9 +276,16 @@
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS9dYykqhLDctkDUvYOrX5buK09uK1hHaryxnro6YiHltFPKyTCkd_ji_pWWdIPfy-XdlNB-XhTMv0-/pub?gid=0&single=true&output=csv";
 const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-
-/* Department order */
 const DEPT_RANK = { operations:1, warehouse:2, installation:3, turf:4, wellness:5 };
+
+function setTvScale(){
+  // 55" TVs are often 1080p. This sets a readable baseline and scales gently.
+  const w = window.innerWidth || 1920;
+  const scale = Math.max(1, Math.min(1.25, w / 1920));
+  document.documentElement.style.setProperty("--tv", String(scale));
+}
+setTvScale();
+window.addEventListener("resize", setTvScale);
 
 function normalizeDept(d=""){
   d = d.toLowerCase().trim();
@@ -262,8 +305,8 @@ function getTodayAbbrev(){
 
 function mondayOfThisWeekISO(){
   const d = new Date();
-  const day = d.getDay(); // Sun=0..Sat=6
-  const diff = (day === 0 ? -6 : 1 - day); // move to Monday
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1 - day);
   const monday = new Date(d);
   monday.setDate(d.getDate() + diff);
   monday.setHours(0,0,0,0);
@@ -274,7 +317,6 @@ function mondayOfThisWeekISO(){
 }
 
 function parseCSV(text){
-  // Robust CSV parser (handles quoted commas)
   const rows = [];
   let row = [], cur = "", inQ = false;
   for (let i=0; i<text.length; i++){
@@ -293,7 +335,6 @@ function parseCSV(text){
 
   const rawHeader = (rows.shift() || []).map(h => (h||"").trim().toLowerCase());
   const header = rawHeader.map(h => {
-    // Map known fields to code-friendly keys
     if (h === "default department") return "default_department";
     if (h === "department") return "dept";
     if (h === "person" || h === "employee") return "employee";
@@ -339,14 +380,12 @@ function getCellBg(r){
   if (d === "turf") return "var(--tu)";
   if (d === "operations") return "var(--op)";
   if (d === "wellness") return "var(--we)";
-
   return "#ffffff";
 }
 
 function buildTabs(weekStarts, selected, onSelect){
   const el = document.getElementById("tabs");
   el.innerHTML = "";
-
   if (weekStarts.length <= 1) return;
 
   const thisMon = mondayOfThisWeekISO();
@@ -377,7 +416,6 @@ function buildBoard(records){
 
   const today = getTodayAbbrev();
 
-  // Group records by employee
   const byEmployee = new Map();
   for (const r of records){
     if (!r.employee) continue;
@@ -385,14 +423,12 @@ function buildBoard(records){
     byEmployee.get(r.employee).push(r);
   }
 
-  // Default dept per employee: always prefer default_department
   const employeeDefaultDept = {};
   for (const [e, recs] of byEmployee.entries()){
     const ddRaw = recs.find(x => (x.default_department || "").trim() !== "")?.default_department || "";
     employeeDefaultDept[e] = normalizeDept(ddRaw);
   }
 
-  // Sort: dept rank then employee name
   const employees = [...byEmployee.keys()].sort((a,b)=>{
     const da = employeeDefaultDept[a];
     const db = employeeDefaultDept[b];
@@ -401,7 +437,6 @@ function buildBoard(records){
     return (ra - rb) || a.localeCompare(b);
   });
 
-  // Index: employee -> day -> record
   const idx = new Map();
   for (const e of employees) idx.set(e, {});
   for (const r of records){
@@ -415,7 +450,6 @@ function buildBoard(records){
   const table = document.getElementById("board");
   table.innerHTML = "";
 
-  // Header
   const thead = document.createElement("thead");
   const hr = document.createElement("tr");
 
@@ -434,7 +468,6 @@ function buildBoard(records){
   thead.appendChild(hr);
   table.appendChild(thead);
 
-  // Body
   const tbody = document.createElement("tbody");
 
   for (const e of employees){
@@ -456,10 +489,7 @@ function buildBoard(records){
         const taskTxt = (r.task || "").trim();
         const projTxt = (r.project || "").trim();
 
-        // BIG = Task (or OFF/PTO)
         const big = off ? (taskTxt.toUpperCase().startsWith("PTO") ? "PTO" : "OFF") : (taskTxt || projTxt);
-
-        // SMALL = Project
         const small = off ? "" : (projTxt || "");
 
         td.innerHTML = `

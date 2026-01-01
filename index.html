@@ -16,19 +16,18 @@
 
       /* Dept colors (cell backgrounds) */
       --wh:#dbeafe;   /* Warehouse – blue */
-
-      /* Installation + Turf (swapped earlier) */
       --in:#fde68a;   /* Installation – yellow */
       --tu:#bbf7d0;   /* Turf – green */
-
       --op:#e9d5ff;   /* Operations – purple */
-
-      /* NEW: Wellness (not white) */
       --we:#ffe4e6;   /* Wellness – soft rose */
 
-      /* Status colors (updated) */
-      --tr:#cffafe;   /* Travel – aqua (distinct from Installation) */
+      /* Status colors */
+      --tr:#cffafe;   /* Travel – aqua */
       --off:#f1f5f9;  /* Off – muted slate */
+
+      /* Divider styling */
+      --divider:#111827;
+      --dividerText:#ffffff;
     }
 
     *{ box-sizing:border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
@@ -98,14 +97,14 @@
       border:1px solid rgba(0,0,0,.08);
     }
 
-    /* BIG: Task */
+    /* BIG = Task */
     .big{
       font-size:22px;
       font-weight:900;
       line-height:1.05;
     }
 
-    /* SMALL: Project — Location */
+    /* SMALL = Project — Location */
     .small{
       font-size:16px;
       color:#374151;
@@ -137,6 +136,21 @@
     .cell.off .big,
     .cell.off .small{
       color:rgba(17,24,39,.65);
+    }
+
+    /* Department divider row */
+    .divider th{
+      background:var(--divider);
+      color:var(--dividerText);
+      font-size:18px;
+      letter-spacing:.6px;
+      text-transform:uppercase;
+      padding:12px 18px;
+      border-right:none !important;
+      border-bottom:2px solid rgba(255,255,255,.10);
+    }
+    .divider th span{
+      opacity:0.9;
     }
 
     /* Legend */
@@ -182,15 +196,33 @@
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS9dYykqhLDctkDUvYOrX5buK09uK1hHaryxnro6YiHltFPKyTCkd_ji_pWWdIPfy-XdlNB-XhTMv0-/pub?gid=0&single=true&output=csv";
 const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
-/* Sort order by DEFAULT department (requested) */
+/* Requested department order */
 const DEPT_RANK = {
   operations: 1,
   warehouse: 2,
   installation: 3,
-  install: 3,
   turf: 4,
   wellness: 5
 };
+
+const DEPT_LABEL = {
+  operations: "Operations",
+  warehouse: "Warehouse",
+  installation: "Installation",
+  turf: "Turf",
+  wellness: "Wellness"
+};
+
+function normalizeDept(d=""){
+  d = d.toLowerCase().trim();
+  if (!d) return "";
+  if (d.startsWith("op")) return "operations";
+  if (d.startsWith("ware")) return "warehouse";
+  if (d.startsWith("inst")) return "installation";
+  if (d.startsWith("turf")) return "turf";
+  if (d.startsWith("well")) return "wellness";
+  return d; // keep as-is for unknowns
+}
 
 function getTodayAbbrev(){
   const map = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -241,7 +273,7 @@ function normDay(x){
 }
 
 function isOffRow(r){
-  const dept = (r.dept || "").toLowerCase().trim();
+  const dept = normalizeDept(r.dept || "");
   const task = ((r.task || "")).toLowerCase().trim();
   return dept === "off" || task === "off" || task === "pto" || task.startsWith("off ") || task.startsWith("pto ");
 }
@@ -256,14 +288,34 @@ function getCellBg(r){
   if (isOffRow(r)) return "var(--off)";
   if (isTravelRow(r)) return "var(--tr)";
 
-  const d = (r.dept || "").toLowerCase().trim();
-  if (d.startsWith("ware")) return "var(--wh)";
-  if (d.startsWith("inst") || d === "installation") return "var(--in)";
-  if (d.startsWith("turf")) return "var(--tu)";
-  if (d.startsWith("op"))   return "var(--op)";
-  if (d.startsWith("well")) return "var(--we)";
+  const d = normalizeDept(r.dept || "");
+  if (d === "warehouse") return "var(--wh)";
+  if (d === "installation") return "var(--in)";
+  if (d === "turf") return "var(--tu)";
+  if (d === "operations") return "var(--op)";
+  if (d === "wellness") return "var(--we)";
 
   return "#ffffff";
+}
+
+function pickDefaultDeptForPerson(recordsForPerson){
+  // Prefer explicit default_department if present in any row (works even if person is OFF all week)
+  for (const r of recordsForPerson){
+    const dd = normalizeDept(r.default_department || "");
+    if (dd) return dd;
+  }
+
+  // Otherwise pick most frequent non-off/non-travel dept from their assignment rows
+  const counts = {};
+  for (const r of recordsForPerson){
+    const d = normalizeDept(r.dept || "");
+    if (!d) continue;
+    if (d === "off") continue;
+    if (d.startsWith("trav")) continue;
+    counts[d] = (counts[d] || 0) + 1;
+  }
+  const best = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0];
+  return best || "";
 }
 
 function buildBoard(records){
@@ -272,43 +324,28 @@ function buildBoard(records){
 
   const today = getTodayAbbrev();
 
-  // Determine each person's default department (prefer explicit column if present; fallback to their most frequent dept)
-  const personDefaultDept = {};
-  const deptCounts = {};
-
+  // Group records by person
+  const byPerson = new Map();
   for (const r of records){
-    const p = r.person;
-    if (!p) continue;
-
-    const def = (r.default_department || "").trim();
-    if (def && !personDefaultDept[p]) personDefaultDept[p] = def;
-
-    const d = (r.dept || "").trim();
-    if (!d) continue;
-
-    deptCounts[p] = deptCounts[p] || {};
-    deptCounts[p][d] = (deptCounts[p][d] || 0) + 1;
+    if (!r.person) continue;
+    if (!byPerson.has(r.person)) byPerson.set(r.person, []);
+    byPerson.get(r.person).push(r);
   }
 
-  // If no explicit default department provided, choose the most frequent dept (excluding Off/Travel)
-  for (const p of Object.keys(deptCounts)){
-    if (personDefaultDept[p]) continue;
-    const counts = deptCounts[p];
-    const entries = Object.entries(counts)
-      .filter(([k]) => !/^off$/i.test(k) && !/^trav/i.test(k))
-      .sort((a,b)=>b[1]-a[1]);
-    if (entries[0]) personDefaultDept[p] = entries[0][0];
+  // Determine default dept per person (includes off-only people via default_department)
+  const personDefaultDept = {};
+  for (const [p, recs] of byPerson.entries()){
+    personDefaultDept[p] = pickDefaultDeptForPerson(recs);
   }
 
-  // Build sorted people list by requested order
-  const people = [...new Set(records.map(r => r.person).filter(Boolean))]
-    .sort((a,b)=>{
-      const da = (personDefaultDept[a] || "").toLowerCase().trim();
-      const db = (personDefaultDept[b] || "").toLowerCase().trim();
-      const ra = DEPT_RANK[da] ?? DEPT_RANK[da.replace(/^inst.*/,"installation")] ?? 9999;
-      const rb = DEPT_RANK[db] ?? DEPT_RANK[db.replace(/^inst.*/,"installation")] ?? 9999;
-      return (ra - rb) || a.localeCompare(b);
-    });
+  // Sort people: dept rank, then name
+  const people = [...byPerson.keys()].sort((a,b)=>{
+    const da = personDefaultDept[a];
+    const db = personDefaultDept[b];
+    const ra = DEPT_RANK[da] ?? 9999;
+    const rb = DEPT_RANK[db] ?? 9999;
+    return (ra - rb) || a.localeCompare(b);
+  });
 
   // Index: person -> day -> record
   const idx = new Map();
@@ -343,9 +380,29 @@ function buildBoard(records){
   thead.appendChild(hr);
   table.appendChild(thead);
 
-  // Body
+  // Body with department divider rows
   const tbody = document.createElement("tbody");
+
+  let lastDeptRank = null;
   for (const p of people){
+    const deptKey = personDefaultDept[p] || "";
+    const deptRank = DEPT_RANK[deptKey] ?? 9999;
+
+    // Insert divider when dept group changes
+    if (deptRank !== lastDeptRank){
+      lastDeptRank = deptRank;
+
+      const divTr = document.createElement("tr");
+      divTr.className = "divider";
+
+      const divTh = document.createElement("th");
+      divTh.colSpan = 1 + DAYS.length;
+      divTh.innerHTML = `<span>${DEPT_LABEL[deptKey] || (deptKey ? deptKey : "Other")}</span>`;
+      divTr.appendChild(divTh);
+
+      tbody.appendChild(divTr);
+    }
+
     const tr = document.createElement("tr");
 
     const th = document.createElement("th");
@@ -368,7 +425,7 @@ function buildBoard(records){
         // BIG = Task (or OFF/PTO)
         const big = off ? (taskTxt.toUpperCase().startsWith("PTO") ? "PTO" : "OFF") : (taskTxt || projTxt);
 
-        // SMALL = Project — Location (location appended)
+        // SMALL = Project — Location
         const small = off ? "" : (projTxt ? (locTxt ? `${projTxt} — ${locTxt}` : projTxt) : (locTxt || ""));
 
         td.innerHTML = `

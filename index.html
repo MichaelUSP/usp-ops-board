@@ -24,10 +24,30 @@
       /* Status colors */
       --tr:#cffafe;   /* Travel – aqua */
       --off:#f1f5f9;  /* Off */
+
+      /* Auto-fit variables (set by JS) */
+      --headerH: 160px;
+      --rowH: 90px;
+      --empColW: 210px;
+
+      --nameFS: 20px;
+      --taskFS: 22px;
+      --projFS: 16px;
+      --cellPadY: 14px;
+      --cellPadX: 16px;
+      --cellGap: 6px;
     }
 
     *{ box-sizing:border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
-    body{ margin:0; background:var(--bg); color:var(--text); }
+
+    html, body { height:100%; }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      overflow:hidden; /* ✅ prevent page scroll on TV */
+    }
 
     header{
       display:flex;
@@ -75,7 +95,6 @@
       border-color:#111827;
     }
 
-    /* Header right area: legend + logo */
     .header-right{
       display:flex;
       align-items:center;
@@ -108,10 +127,15 @@
       flex:0 0 auto;
     }
 
-    main{ padding:18px 22px; }
+    /* ✅ main becomes a fixed-height viewport area */
+    main{
+      padding:18px 22px;
+      height: calc(100vh - var(--headerH));
+    }
 
     .board{
       width:100%;
+      height:100%;
       table-layout:fixed;
       border-collapse:separate;
       border-spacing:0;
@@ -127,16 +151,17 @@
       font-size:20px;
       border-bottom:2px solid var(--grid);
       text-align:center;
+      font-weight:800;
     }
 
     .board th.employee{
-      width:210px;
+      width: var(--empColW);  /* ✅ auto-fit width */
       text-align:left;
       padding-left:18px;
     }
 
     .board td, .board tbody th{
-      height:90px;
+      height: var(--rowH);    /* ✅ auto-fit height */
       padding:12px;
       border-right:1px solid var(--grid);
       border-bottom:1px solid var(--grid);
@@ -144,38 +169,47 @@
     }
 
     .board tbody th{
-      font-weight:700;
+      font-weight:800;
       letter-spacing:.4px;
       background:#ffffff;
-      font-size:20px;
+      font-size: var(--nameFS); /* ✅ auto-fit font */
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     .cell{
       height:100%;
       border-radius:12px;
-      padding:14px 16px;
+      padding: var(--cellPadY) var(--cellPadX); /* ✅ auto-fit padding */
       display:flex;
       flex-direction:column;
       justify-content:center;
-      gap:6px;
+      gap: var(--cellGap);
       border:1px solid rgba(0,0,0,.08);
     }
 
-    /* BIG = Task */
+    /* BIG = Task (✅ allow 2 lines to preserve detail) */
     .big{
-      font-size:22px;
+      font-size: var(--taskFS);
       font-weight:900;
-      line-height:1.05;
+      line-height:1.08;
+      overflow:hidden;
+      display:-webkit-box;
+      -webkit-box-orient:vertical;
+      -webkit-line-clamp:2;
     }
 
-    /* SMALL = Project */
+    /* SMALL = Project (1 line) */
     .small{
-      font-size:16px;
+      font-size: var(--projFS);
       color:#374151;
-      line-height:1.1;
-      white-space:nowrap;
+      line-height:1.12;
       overflow:hidden;
-      text-overflow:ellipsis;
+      display:-webkit-box;
+      -webkit-box-orient:vertical;
+      -webkit-line-clamp:1;
+      opacity:.92;
     }
 
     /* STRONG TODAY HIGHLIGHT */
@@ -212,12 +246,10 @@
       <div class="sub" id="weekLabel">Loading week…</div>
     </div>
 
-    <!-- Tabs render here -->
     <div class="tabs" id="tabs"></div>
   </div>
 
   <div class="header-right">
-    <!-- Legend moved to header -->
     <div class="legend" aria-label="Color legend">
       <div class="tag"><span class="sw" style="background:var(--op)"></span>Ops</div>
       <div class="tag"><span class="sw" style="background:var(--wh)"></span>WH</div>
@@ -228,7 +260,6 @@
       <div class="tag"><span class="sw" style="background:var(--off)"></span>Off</div>
     </div>
 
-    <!-- Logo on the RIGHT -->
     <img src="./usp-logo.png" alt="Urban Soccer Park" class="logo" />
   </div>
 </header>
@@ -240,9 +271,60 @@
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS9dYykqhLDctkDUvYOrX5buK09uK1hHaryxnro6YiHltFPKyTCkd_ji_pWWdIPfy-XdlNB-XhTMv0-/pub?gid=0&single=true&output=csv";
 const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-
-/* Department order */
 const DEPT_RANK = { operations:1, warehouse:2, installation:3, turf:4, wellness:5 };
+
+let lastEmployeeCount = 0;
+
+function applyAutoFit(numEmployees){
+  lastEmployeeCount = numEmployees;
+
+  const header = document.querySelector("header");
+  const headerH = header ? header.getBoundingClientRect().height : 160;
+  document.documentElement.style.setProperty("--headerH", `${Math.ceil(headerH)}px`);
+
+  // Available vertical space for the table area (main includes padding already)
+  const main = document.querySelector("main");
+  const mainStyles = main ? getComputedStyle(main) : null;
+  const padTop = mainStyles ? parseFloat(mainStyles.paddingTop) : 18;
+  const padBottom = mainStyles ? parseFloat(mainStyles.paddingBottom) : 18;
+
+  const available = window.innerHeight - headerH - padTop - padBottom;
+
+  // Reserve space for the table header row (days)
+  const tableHeaderH = 64; // consistent, readable
+  const bodyAvailable = Math.max(available - tableHeaderH, 260);
+
+  // Compute row height; clamp so it stays readable at 10ft
+  let rowH = Math.floor(bodyAvailable / Math.max(numEmployees, 1));
+  rowH = Math.max(62, Math.min(92, rowH));
+
+  // Fonts scale with row height (clamped)
+  const nameFS = Math.max(16, Math.min(22, Math.floor(rowH * 0.25)));
+  const taskFS = Math.max(18, Math.min(24, Math.floor(rowH * 0.30)));
+  const projFS = Math.max(13, Math.min(18, Math.floor(rowH * 0.22)));
+
+  // Tighten padding as rows get smaller
+  const cellPadY = Math.max(8, Math.min(14, Math.floor(rowH * 0.16)));
+  const cellPadX = Math.max(10, Math.min(16, Math.floor(rowH * 0.20)));
+  const cellGap  = Math.max(4, Math.min(7, Math.floor(rowH * 0.07)));
+
+  // Employee column width: keep tight so schedule stays readable
+  const empColW = Math.max(180, Math.min(240, Math.floor(window.innerWidth * 0.12)));
+
+  const root = document.documentElement.style;
+  root.setProperty("--rowH", `${rowH}px`);
+  root.setProperty("--nameFS", `${nameFS}px`);
+  root.setProperty("--taskFS", `${taskFS}px`);
+  root.setProperty("--projFS", `${projFS}px`);
+  root.setProperty("--cellPadY", `${cellPadY}px`);
+  root.setProperty("--cellPadX", `${cellPadX}px`);
+  root.setProperty("--cellGap", `${cellGap}px`);
+  root.setProperty("--empColW", `${empColW}px`);
+}
+
+window.addEventListener("resize", () => {
+  if (lastEmployeeCount) applyAutoFit(lastEmployeeCount);
+});
 
 function normalizeDept(d=""){
   d = d.toLowerCase().trim();
@@ -262,8 +344,8 @@ function getTodayAbbrev(){
 
 function mondayOfThisWeekISO(){
   const d = new Date();
-  const day = d.getDay(); // Sun=0..Sat=6
-  const diff = (day === 0 ? -6 : 1 - day); // move to Monday
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1 - day);
   const monday = new Date(d);
   monday.setDate(d.getDate() + diff);
   monday.setHours(0,0,0,0);
@@ -274,7 +356,6 @@ function mondayOfThisWeekISO(){
 }
 
 function parseCSV(text){
-  // Robust CSV parser (handles quoted commas)
   const rows = [];
   let row = [], cur = "", inQ = false;
   for (let i=0; i<text.length; i++){
@@ -293,7 +374,6 @@ function parseCSV(text){
 
   const rawHeader = (rows.shift() || []).map(h => (h||"").trim().toLowerCase());
   const header = rawHeader.map(h => {
-    // Map known fields to code-friendly keys
     if (h === "default department") return "default_department";
     if (h === "department") return "dept";
     if (h === "person" || h === "employee") return "employee";
@@ -339,14 +419,12 @@ function getCellBg(r){
   if (d === "turf") return "var(--tu)";
   if (d === "operations") return "var(--op)";
   if (d === "wellness") return "var(--we)";
-
   return "#ffffff";
 }
 
 function buildTabs(weekStarts, selected, onSelect){
   const el = document.getElementById("tabs");
   el.innerHTML = "";
-
   if (weekStarts.length <= 1) return;
 
   const thisMon = mondayOfThisWeekISO();
@@ -377,7 +455,6 @@ function buildBoard(records){
 
   const today = getTodayAbbrev();
 
-  // Group records by employee
   const byEmployee = new Map();
   for (const r of records){
     if (!r.employee) continue;
@@ -385,14 +462,12 @@ function buildBoard(records){
     byEmployee.get(r.employee).push(r);
   }
 
-  // Default dept per employee: always prefer default_department
   const employeeDefaultDept = {};
   for (const [e, recs] of byEmployee.entries()){
     const ddRaw = recs.find(x => (x.default_department || "").trim() !== "")?.default_department || "";
     employeeDefaultDept[e] = normalizeDept(ddRaw);
   }
 
-  // Sort: dept rank then employee name
   const employees = [...byEmployee.keys()].sort((a,b)=>{
     const da = employeeDefaultDept[a];
     const db = employeeDefaultDept[b];
@@ -401,7 +476,9 @@ function buildBoard(records){
     return (ra - rb) || a.localeCompare(b);
   });
 
-  // Index: employee -> day -> record
+  /* ✅ AUTO-FIT happens here (depends on employee count) */
+  applyAutoFit(employees.length);
+
   const idx = new Map();
   for (const e of employees) idx.set(e, {});
   for (const r of records){
@@ -415,7 +492,6 @@ function buildBoard(records){
   const table = document.getElementById("board");
   table.innerHTML = "";
 
-  // Header
   const thead = document.createElement("thead");
   const hr = document.createElement("tr");
 
@@ -434,7 +510,6 @@ function buildBoard(records){
   thead.appendChild(hr);
   table.appendChild(thead);
 
-  // Body
   const tbody = document.createElement("tbody");
 
   for (const e of employees){
@@ -456,10 +531,7 @@ function buildBoard(records){
         const taskTxt = (r.task || "").trim();
         const projTxt = (r.project || "").trim();
 
-        // BIG = Task (or OFF/PTO)
         const big = off ? (taskTxt.toUpperCase().startsWith("PTO") ? "PTO" : "OFF") : (taskTxt || projTxt);
-
-        // SMALL = Project
         const small = off ? "" : (projTxt || "");
 
         td.innerHTML = `

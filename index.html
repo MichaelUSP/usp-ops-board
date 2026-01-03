@@ -609,7 +609,6 @@ td.innerHTML = `
   table.appendChild(tbody);
 
   requestAnimationFrame(() => applyAutoFitToViewport(sortedEmployees.length));
-}
 
 function render(){
   const weekStarts = [...new Set(allRows.map(r => r.week_start).filter(Boolean))].sort();
